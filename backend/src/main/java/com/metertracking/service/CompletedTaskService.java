@@ -35,7 +35,7 @@ public class CompletedTaskService {
     /**
      * Выполняет задачу пользователем.
      *
-     * ✅ ИЗМЕНЕНО: fio и adres берутся из плана (куда они попали из 1С при создании),
+     * ИЗМЕНЕНО: fio и adres берутся из плана (куда они попали из 1С при создании),
      * либо из запроса если в плане их нет.
      */
     @Transactional
@@ -126,7 +126,7 @@ public class CompletedTaskService {
 
         CompletedTask saved = completedTaskRepository.save(completedTask);
         recordHistory(saved, user, "CREATE", "Задача создана", null, "Создана");
-        // ✅ Отправляем в 1С
+        // Отправляем в 1С
         try {
             oneCHttpService.sendCompletedTask(saved);
         } catch (Exception e) {

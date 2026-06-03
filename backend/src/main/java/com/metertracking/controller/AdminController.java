@@ -48,7 +48,7 @@ public class AdminController {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final WebSocketService webSocketService;
-    private final OneCHttpService oneCHttpService; // ✅ HTTP вместо COM
+    private final OneCHttpService oneCHttpService; // HTTP вместо COM
     private final MeterDeviceService meterDeviceService;
     private final ExcelExportService excelExportService;
 

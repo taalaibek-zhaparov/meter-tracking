@@ -52,7 +52,7 @@ public class Plan {
     @Column(name = "new_pokazaniya")
     private Double newPokazaniya;
 
-    // ✅ НОВЫЕ ПОЛЯ из 1С HTTP публикации
+    // НОВЫЕ ПОЛЯ из 1С HTTP публикации
     @Column(name = "fio")
     private String fio;     // ФИО абонента
 

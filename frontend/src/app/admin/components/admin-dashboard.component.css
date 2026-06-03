@@ -599,7 +599,7 @@ input[type="date"].form-control {
   .tab { padding: 7px 8px; font-size: 11px; }
 }
 
-/* ✅ ДОБАВИТЬ В КОНЕЦ admin-dashboard.component.css */
+/* ДОБАВИТЬ В КОНЕЦ admin-dashboard.component.css */
 
 /* ── Регион на карточке пользователя ── */
 .user-region {

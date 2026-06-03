@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// ✅ ИСПРАВЛЕНО: убран @CrossOrigin(origins = "*") — CORS уже настроен в SecurityConfig
+// ИСПРАВЛЕНО: убран @CrossOrigin(origins = "*") — CORS уже настроен в SecurityConfig
 @RestController
 @RequestMapping("/api/user")
 @PreAuthorize("hasAnyRole('USER', 'ADMIN')")

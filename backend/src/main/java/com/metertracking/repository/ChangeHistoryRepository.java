@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface ChangeHistoryRepository extends JpaRepository<ChangeHistory, Long> {
 
-    // ✅ ИСПРАВЛЕНО: JOIN FETCH — грузим user и completedTask за 1 запрос
+    // ИСПРАВЛЕНО: JOIN FETCH — грузим user и completedTask за 1 запрос
     @Query("SELECT h FROM ChangeHistory h LEFT JOIN FETCH h.user LEFT JOIN FETCH h.completedTask WHERE h.completedTask = :task ORDER BY h.changeTime DESC")
     List<ChangeHistory> findByCompletedTaskOrderByChangeTimeDesc(@Param("task") CompletedTask task);
 

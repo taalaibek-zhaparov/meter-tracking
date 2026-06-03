@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        // ❌ Нет токена → сразу 401
+        // Нет токена → сразу 401
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Authorization header missing or invalid");
@@ -81,19 +81,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
         } catch (ExpiredJwtException e) {
-            // ❌ токен истёк
+            // токен истёк
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Token expired");
             return;
 
         } catch (Exception e) {
-            // ❌ любой другой косяк с токеном
+            // любой другой косяк с токеном
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid token");
             return;
         }
 
-        // ✅ всё ок → пропускаем дальше
+        // всё ок → пропускаем дальше
         filterChain.doFilter(request, response);
     }
 }

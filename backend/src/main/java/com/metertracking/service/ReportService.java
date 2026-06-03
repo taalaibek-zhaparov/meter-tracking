@@ -130,7 +130,7 @@ public class ReportService {
             problems.add("📊 Общий % выполнения ниже нормы: " + kpi.getCompletionRate() + "%");
 
         if (problems.isEmpty())
-            problems.add("✅ Критических проблем не обнаружено");
+            problems.add("Критических проблем не обнаружено");
 
         return problems;
     }

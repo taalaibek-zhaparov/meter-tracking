@@ -32,7 +32,7 @@
         <div class="kpi-label">Всего планов</div>
       </div>
       <div class="kpi-card accent-green">
-        <!-- <div class="kpi-icon">✅</div> -->
+        <!-- <div class="kpi-icon"></div> -->
         <div class="kpi-num">{{ kpi.completedPlans }}</div>
         <div class="kpi-label">Выполнено</div>
       </div>
@@ -76,12 +76,12 @@
       <div class="block-title">Автоматический анализ проблем</div>
       <!-- Иконки убраны из классов startsWith, логика осталась -->
       <div class="problem-item" *ngFor="let p of problems"
-            [class.problem-ok]="p.startsWith('✅')"
+            [class.problem-ok]="p.startsWith('')"
             [class.problem-warn]="p.startsWith('⚠') || p.startsWith('👤') || p.startsWith('📊')"
             [class.problem-crit]="p.startsWith('🔴') || p.startsWith('⛔')">
 
-          <!-- ✅ Зелёная галочка в квадрате -->
-          <svg *ngIf="p.startsWith('✅')" class="check-icon" viewBox="0 0 24 24" fill="none">
+          <!-- Зелёная галочка в квадрате -->
+          <svg *ngIf="p.startsWith('')" class="check-icon" viewBox="0 0 24 24" fill="none">
             <rect x="2" y="2" width="20" height="20" rx="4" ry="4"
                   stroke="#5aaa2a" stroke-width="2" fill="none"/>
             <polyline points="5,12 10,17 19,7"
@@ -89,7 +89,7 @@
                       stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
 
-          <!-- ⚠️ Красный треугольник -->
+          <!-- Красный треугольник -->
           <svg *ngIf="p.startsWith('⚠') || p.startsWith('👤') || p.startsWith('📊')"
               class="check-icon" viewBox="0 0 24 24" fill="none">
             <path d="M12 3L22 21H2L12 3Z" fill="#ef4444" stroke="none"/>
@@ -122,7 +122,7 @@
       </div>
       <div class="top-card top-worst" *ngIf="top.bottomMaster">
         <div class="top-badge">Требует внимания</div>
-        <!-- <div class="top-badge">⚠️ Требует внимания</div> -->
+        <!-- <div class="top-badge">Требует внимания</div> -->
         <div class="top-name">{{ top.bottomMaster.masterName }}</div>
         <div class="top-sub">{{ top.bottomMaster.region }} · {{ top.bottomMaster.pending }} не выполнено</div>
       </div>

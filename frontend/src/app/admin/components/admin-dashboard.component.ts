@@ -55,7 +55,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     nomerSchetchika: '',
     pokazaniya: 0,
     data: '',
-    // ✅ НОВЫЕ ПОЛЯ
+    // НОВЫЕ ПОЛЯ
     fio: '',
     adres: '',
     documentType: ''
@@ -233,7 +233,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       p.tip?.toLowerCase().includes(q) ||
       p.nomerSchetchika?.toLowerCase().includes(q) ||
       p.user?.username?.toLowerCase().includes(q) ||
-      // ✅ НОВЫЕ ПОЛЯ в поиске
+      // НОВЫЕ ПОЛЯ в поиске
       p.fio?.toLowerCase().includes(q) ||
       p.adres?.toLowerCase().includes(q)
     );
@@ -251,7 +251,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       t.nomerSimKarty?.toLowerCase().includes(q) ||
       t.nomerIccid?.toLowerCase().includes(q) ||
       t.user?.username?.toLowerCase().includes(q) ||
-      // ✅ НОВЫЕ ПОЛЯ в поиске
+      // НОВЫЕ ПОЛЯ в поиске
       t.fio?.toLowerCase().includes(q) ||
       t.adres?.toLowerCase().includes(q)
     );
@@ -313,7 +313,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.planData.nomerSchetchika = data.meterNumber || this.planData.nomerSchetchika;
         this.planData.pokazaniya     = data.reading   || this.planData.pokazaniya;
         this.planData.data           = data.date      || this.planData.data;
-        // ✅ НОВЫЕ ПОЛЯ: ФИО и Адрес из 1С
+        // НОВЫЕ ПОЛЯ: ФИО и Адрес из 1С
         this.planData.fio   = data.fio   || '';
         this.planData.adres = data.adres || '';
         // Регион НЕ перезаписываем — берём от пользователя

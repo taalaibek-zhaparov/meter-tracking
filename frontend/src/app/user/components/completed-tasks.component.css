@@ -177,7 +177,7 @@
 .btn-reset-inline:hover { background: #eef2ff; }
 
 /* ── ТАБЛИЦА ── */
-/* ✅ убраны max-height и overflow-y — таблица растягивается как у admin */
+/* убраны max-height и overflow-y — таблица растягивается как у admin */
 .tasks-table-container {
   width: 100%;
   overflow-x: auto;
@@ -255,7 +255,7 @@
 }
 .btn-action:hover { transform: scale(1.08); }
 
-/* ✅ редактировать — синий как в meter-devices */
+/* редактировать — синий как в meter-devices */
 .btn-edit { color: #667eea; }
 .btn-edit:hover {
   background: #eef2ff;
@@ -263,7 +263,7 @@
   color: #667eea;
 }
 
-/* ✅ история — фиолетовый */
+/* история — фиолетовый */
 .btn-history { color: #7c3aed; }
 .btn-history:hover {
   background: #fdf4ff;

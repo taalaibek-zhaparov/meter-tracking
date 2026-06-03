@@ -552,7 +552,7 @@ input[type="date"].form-control {
   .detail-row { flex-direction: column; gap: 2px; }
 }
 
-/* ✅ ДОБАВИТЬ В КОНЕЦ my-tasks.component.css */
+/* ДОБАВИТЬ В КОНЕЦ my-tasks.component.css */
 
 /* Пломба гос. — два поля в одной строке */
 .plomba-gos-wrapper {

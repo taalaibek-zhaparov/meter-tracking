@@ -50,7 +50,7 @@ public class AuthService {
         user.setUsername(request.getUsername());
         user.setDeleted(false);
 
-        // ✅ ИСПРАВЛЕНО: регион теперь сохраняется (раньше терялся)
+        // ИСПРАВЛЕНО: регион теперь сохраняется (раньше терялся)
         if (request.getRegion() != null && !request.getRegion().isBlank()) {
             user.setRegion(request.getRegion());
         }

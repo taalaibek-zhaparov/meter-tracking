@@ -145,7 +145,7 @@ export class MyTasksComponent implements OnInit, OnDestroy {
     this.showSignatureWarning = false;
   }
 
-  // ✅ УПРОЩЕНО: просто сохраняем в БД
+  // УПРОЩЕНО: просто сохраняем в БД
   // PDF скачивается отдельно из списка "Выполненные задачи" — там уже с номером документа
   completeTask(): void {
     this.errorMessage = '';
@@ -162,7 +162,7 @@ export class MyTasksComponent implements OnInit, OnDestroy {
       next: (response: any) => {
         this.successMessage = 'Данные успешно записались в БД!';
 
-        // ✅ Только после успешного сохранения — помечаем счётчик занятым
+        // Только после успешного сохранения — помечаем счётчик занятым
         if (this.meterSelectedFromDb && this.completedTaskData.nomerSchetchika) {
           this.userService.markMeterBusy(this.completedTaskData.nomerSchetchika).subscribe({
             next: () => console.log('Счётчик помечен как Занят:', this.completedTaskData.nomerSchetchika),
@@ -198,7 +198,7 @@ export class MyTasksComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ markMeterBusy убран — вызывается только после сохранения в БД
+  // markMeterBusy убран — вызывается только после сохранения в БД
   selectMeterFromSearch(meter: any): void {
     this.completedTaskData.nomerSchetchika = meter.meterNumber;
     this.completedTaskData.tip             = meter.meterType     || this.completedTaskData.tip;

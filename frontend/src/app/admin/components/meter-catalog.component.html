@@ -166,7 +166,7 @@
                 rows="14">
       </textarea>
 
-      <div class="import-error" *ngIf="importError">⚠️ {{ importError }}</div>
+      <div class="import-error" *ngIf="importError">{{ importError }}</div>
 
       <div class="modal-footer">
         <button class="btn btn-cancel" (click)="closeImportModal()">Отмена</button>
@@ -180,7 +180,7 @@
 
     <!-- РЕЗУЛЬТАТ ИМПОРТА -->
     <div class="modal-body import-result" *ngIf="importResult">
-      <div class="result-icon">✅</div>
+      <div class="result-icon"></div>
       <h4>Импорт завершён</h4>
 
       <div class="result-grid">

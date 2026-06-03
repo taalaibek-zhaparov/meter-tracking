@@ -3,7 +3,7 @@ export interface Plan {
   user: { id: number; username: string; email: string; } | null;
   region: string; tp: string; licevoy: string; tip: string;
   nomerSchetchika: string; pokazaniya: number; data: string; completed: boolean;
-  // ✅ НОВЫЕ ПОЛЯ из 1С HTTP
+  // НОВЫЕ ПОЛЯ из 1С HTTP
   fio?: string;
   adres?: string;
   documentType?: string;
@@ -12,7 +12,7 @@ export interface Plan {
 export interface PlanRequest {
   userId: number; region: string; tp: string; licevoy: string; tip: string;
   nomerSchetchika: string; pokazaniya: number; data: string;
-  // ✅ НОВЫЕ ПОЛЯ
+  // НОВЫЕ ПОЛЯ
   fio?: string;
   adres?: string;
    documentType?: string;
@@ -48,7 +48,7 @@ export interface CompletedTaskRequest {
   plombaGos: string; naKryshke: string; naYashike: string;
   newPhases?: number | null;
   newAmperage?: number | null;
-  // ✅ НОВЫЕ ПОЛЯ
+  // НОВЫЕ ПОЛЯ
   fio?: string;
   adres?: string;
   znch?: number | null;
@@ -72,7 +72,7 @@ export interface ChangeHistory {
 export interface OneCMeterReading {
   account: string; tp: string; region: string;
   meterNumber: string; meterType: string; reading: number; date: string;
-  // ✅ НОВЫЕ ПОЛЯ
+  // НОВЫЕ ПОЛЯ
   fio?: string;
   adres?: string;
 }

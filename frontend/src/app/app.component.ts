@@ -19,17 +19,17 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Подключаем WebSocket если пользователь залогинен
     if (this.authService.isLoggedIn()) {
-      console.log('🔌 Connecting WebSocket...');
+      console.log('Connecting WebSocket...');
       this.webSocketService.connect();
     }
 
     // Подписываемся на изменения токена
     this.authService.token$.subscribe(token => {
       if (token && !this.webSocketService.isConnected()) {
-        console.log('🔌 User logged in, connecting WebSocket...');
+        console.log('User logged in, connecting WebSocket...');
         this.webSocketService.connect();
       } else if (!token && this.webSocketService.isConnected()) {
-        console.log('🔌 User logged out, disconnecting WebSocket...');
+        console.log('User logged out, disconnecting WebSocket...');
         this.webSocketService.disconnect();
       }
     });

@@ -36,7 +36,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
      * Загружает ВСЕХ активных пользователей с ролями.
-     * ✅ ИСПРАВЛЕНО: добавлен JOIN FETCH — без него roles = LazyInit ошибка
+     * ИСПРАВЛЕНО: добавлен JOIN FETCH — без него roles = LazyInit ошибка
      * при open-in-view=false.
      * Используется в AdminController.getAllUsers().
      * DISTINCT нужен из-за JOIN: без него каждый user дублируется

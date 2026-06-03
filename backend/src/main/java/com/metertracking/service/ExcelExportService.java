@@ -23,7 +23,7 @@ public class ExcelExportService {
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle dataStyle   = createDataStyle(workbook);
 
-            // ✅ ДОБАВЛЕНЫ: ФИО и Адрес
+            // ДОБАВЛЕНЫ: ФИО и Адрес
             String[] headers = {
                     "ID", "Мастер", "Регион", "ТП", "Лицевой счёт",
                     "ФИО", "Адрес",
@@ -41,7 +41,7 @@ public class ExcelExportService {
                 row.getCell(2).setCellValue(nullSafe(plan.getRegion()));
                 row.getCell(3).setCellValue(nullSafe(plan.getTp()));
                 row.getCell(4).setCellValue(nullSafe(plan.getLicevoy()));
-                // ✅ НОВЫЕ ПОЛЯ
+                // НОВЫЕ ПОЛЯ
                 row.getCell(5).setCellValue(nullSafe(plan.getFio()));
                 row.getCell(6).setCellValue(nullSafe(plan.getAdres()));
                 // Остальные поля
@@ -69,7 +69,7 @@ public class ExcelExportService {
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle dataStyle   = createDataStyle(workbook);
 
-            // ✅ ДОБАВЛЕНЫ: ФИО и Адрес
+            // ДОБАВЛЕНЫ: ФИО и Адрес
             String[] headers = {
                     "ID", "Мастер", "Регион", "ТП", "Лицевой счёт", "Тип счётчика",
                     "ФИО", "Адрес",
@@ -93,7 +93,7 @@ public class ExcelExportService {
                 row.getCell(3).setCellValue(nullSafe(task.getTp()));
                 row.getCell(4).setCellValue(nullSafe(task.getLicevoy()));
                 row.getCell(5).setCellValue(nullSafe(task.getTip()));
-                // ✅ НОВЫЕ ПОЛЯ
+                // НОВЫЕ ПОЛЯ
                 row.getCell(6).setCellValue(nullSafe(task.getFio()));
                 row.getCell(7).setCellValue(nullSafe(task.getAdres()));
 

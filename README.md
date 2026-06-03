@@ -84,6 +84,18 @@ graph TD
 - Integration with 1C
 - Meter directory with data import
 
+
+## Screenshots
+
+### Login Page
+![Login](docs/screenshots/login.png)
+
+### Admin Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Grafana Monitoring
+![Grafana](docs/screenshots/grafana.png)
+
 ## Quick Start
 
 ### Requirements

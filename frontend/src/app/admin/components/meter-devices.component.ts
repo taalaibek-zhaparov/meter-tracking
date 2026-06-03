@@ -300,7 +300,7 @@ export class MeterDevicesComponent implements OnInit, OnDestroy {
 
   private onBarcodeDetected(code: string): void {
     this.stopScanner(); this.scanResult = code; this.searchQuery = code; this.applySearch();
-    if      (this.filteredDevices.length === 1) this.showSuccess(`✅ Найден: ${this.filteredDevices[0].meterNumber}`);
+    if      (this.filteredDevices.length === 1) this.showSuccess(`Найден: ${this.filteredDevices[0].meterNumber}`);
     else if (this.filteredDevices.length === 0) this.showError(`Счётчик "${code}" не найден`);
   }
 

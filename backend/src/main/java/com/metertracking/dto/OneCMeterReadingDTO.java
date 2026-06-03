@@ -13,7 +13,7 @@ public class OneCMeterReadingDTO {
     private Double reading;
     private LocalDate date;
 
-    // ✅ НОВЫЕ ПОЛЯ из HTTP публикации 1С
+    // НОВЫЕ ПОЛЯ из HTTP публикации 1С
     private String fio;     // ФИО абонента
     private String adres;   // Адрес абонента
 

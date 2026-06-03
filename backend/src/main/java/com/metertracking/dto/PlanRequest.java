@@ -18,7 +18,7 @@ public class PlanRequest {
     private Double pokazaniya;
     private LocalDate data;
 
-    // ✅ НОВЫЕ ПОЛЯ
+    // НОВЫЕ ПОЛЯ
     private String fio;     // ФИО абонента
     private String adres;   // Адрес абонента
     private String documentType;

@@ -166,7 +166,7 @@ export class CompletedTasksComponent implements OnInit {
     });
   }
 
-  // ✅ ИСПРАВЛЕНО: async, generateProtocol теперь возвращает Promise<boolean>
+  // ИСПРАВЛЕНО: async, generateProtocol теперь возвращает Promise<boolean>
   async downloadProtocol(task: any): Promise<void> {
     await this.pdfService.generateProtocol({
       id:                 task.id,

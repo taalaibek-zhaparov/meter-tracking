@@ -39,7 +39,7 @@ export class WebSocketService {
     this.stompClient = new Client({
       webSocketFactory: () => new SockJS(`${environment.apiUrl.replace('/api', '')}/ws`) as any,
 
-      // ✅ Токен обновляется перед КАЖДЫМ переподключением (в т.ч. автоматическим)
+      // Токен обновляется перед КАЖДЫМ переподключением (в т.ч. автоматическим)
       beforeConnect: async () => {
         const token = localStorage.getItem('token');
         if (self.stompClient) {
@@ -57,7 +57,7 @@ export class WebSocketService {
     });
 
     this.stompClient.onConnect = (frame) => {
-      console.log('✅ WebSocket Connected:', frame);
+      console.log('WebSocket Connected:', frame);
       this.connected = true;
       this.connectionStatus$.next(true);
 
@@ -75,14 +75,14 @@ export class WebSocketService {
     };
 
     this.stompClient.onStompError = (frame) => {
-      console.error('❌ STOMP error:', frame);
+      console.error('STOMP error:', frame);
       this.connected = false;
       this.connectionStatus$.next(false);
     };
 
-    // ✅ Убрано ручное переподключение — STOMP сам переподключается через reconnectDelay
+    // Убрано ручное переподключение — STOMP сам переподключается через reconnectDelay
     this.stompClient.onWebSocketClose = () => {
-      console.log('🔌 WebSocket closed');
+      console.log('WebSocket closed');
       this.connected = false;
       this.connectionStatus$.next(false);
     };

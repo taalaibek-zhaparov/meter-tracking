@@ -28,7 +28,7 @@ public class UpdateCompletedTaskRequest {
     private String nomerSimKarty;
     private String nomerIccid;
 
-    // ✅ ДОБАВЛЕНО: новые поля которых не хватало
+    // ДОБАВЛЕНО: новые поля которых не хватало
     private String naKryshke;
     private String naYashike;
     private String plombaGos;

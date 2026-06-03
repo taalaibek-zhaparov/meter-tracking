@@ -3,7 +3,7 @@ export interface User {
   email: string;
   username: string;
   roles: Role[];
-  region: string;  // ✅ обязательное — без ?
+  region: string;  // обязательное — без ?
 }
 
 export interface Role {
@@ -21,7 +21,7 @@ export interface RegisterRequest {
   password: string;
   username: string;
   role: string;
-  region: string;  // ✅ обязательное — без ?
+  region: string;  // обязательное — без ?
 }
 
 export interface LoginResponse {

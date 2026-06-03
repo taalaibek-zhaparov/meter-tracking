@@ -16,7 +16,7 @@ import java.util.Optional;
 /**
  * Сервис управления планами замены счётчиков.
  *
- * ✅ ИЗМЕНЕНО: OneCComService → OneCHttpService (HTTP Web-публикация 1С)
+ * ИЗМЕНЕНО: OneCComService → OneCHttpService (HTTP Web-публикация 1С)
  *
  * Поток создания плана:
  * 1. Находим пользователя по userId
@@ -32,7 +32,7 @@ public class PlanService {
     private final PlanRepository planRepository;
     private final UserRepository userRepository;
     private final WebSocketService webSocketService;
-    private final OneCHttpService oneCHttpService; // ✅ HTTP вместо COM
+    private final OneCHttpService oneCHttpService; // HTTP вместо COM
 
     /**
      * Создаёт новый план замены счётчика.
@@ -63,7 +63,7 @@ public class PlanService {
                 plan.setNomerSchetchika(d.getMeterNumber() != null ? d.getMeterNumber() : request.getNomerSchetchika());
                 plan.setPokazaniya(d.getReading() != null ? d.getReading() : request.getPokazaniya());
                 plan.setData(d.getDate() != null ? d.getDate() : request.getData());
-                // ✅ НОВЫЕ ПОЛЯ из 1С HTTP
+                // НОВЫЕ ПОЛЯ из 1С HTTP
                 plan.setFio(d.getFio());
                 plan.setAdres(d.getAdres());
                 plan.setDocumentType(request.getDocumentType());
