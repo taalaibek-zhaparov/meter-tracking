@@ -1,5 +1,13 @@
 # Meter Tracking
 
+![CI](https://github.com/taalaibek-zhaparov/meter-tracking/actions/workflows/ci.yml/badge.svg)
+![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2-green?logo=springboot)
+![Angular](https://img.shields.io/badge/Angular-17-red?logo=angular)
+![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-blue?logo=postgresql)
+
+
 A system for managing and tracking electricity meter replacement processes for utility companies.
 
 ## Overview
