@@ -1,0 +1,25 @@
+spring.application.name=meter-tracking-app
+
+# PostgreSQL
+spring.datasource.url=jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:meter_tracking_db}
+spring.datasource.username=${DB_USER:postgres}
+spring.datasource.password=${DB_PASSWORD}
+
+# JWT
+jwt.secret=${JWT_SECRET}
+jwt.expiration=86400000
+
+# Server
+server.address=0.0.0.0
+server.port=8080
+
+# 1C Integration
+onec.server=${ONEC_SERVER}
+onec.enabled=${ONEC_ENABLED:false}
+onec.user=${ONEC_USER}
+onec.password=${ONEC_PASSWORD}
+
+# Actuator
+management.endpoints.web.exposure.include=health,info,prometheus,metrics
+management.metrics.export.prometheus.enabled=true
+management.metrics.tags.application=meter-tracking-app
