@@ -1,0 +1,59 @@
+<div class="login-container">
+  <div class="login-card">
+
+    <div class="brand-row">
+      <div class="brand-logo">
+        <img src="assets/logo-hzk.png" alt="ЖАЭСети" class="logo-img"/>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">Жалал-Абадское</div>
+        <div class="brand-sub">предприятие электрических сетей</div>
+        <div class="brand-tag">RPM — REPLACE METER</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <div class="form-group">
+        <div class="input-wrap">
+          <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <input type="email" id="email" name="email" [(ngModel)]="loginData.email"
+                 required email class="field-input" placeholder="Электронный адрес" autocomplete="email"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="input-wrap">
+          <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input [type]="showPassword ? 'text' : 'password'" id="password" name="password"
+                 [(ngModel)]="loginData.password" required class="field-input"
+                 placeholder="Пароль" autocomplete="current-password"/>
+          <button type="button" class="eye-btn" (click)="togglePasswordVisibility()" tabindex="-1">
+            <svg *ngIf="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg *ngIf="showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="error-box" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <button type="submit" class="btn-login" [disabled]="!loginForm.valid || loading">
+        <span *ngIf="!loading">ВОЙТИ</span>
+        <span *ngIf="loading" class="loading-dots">Вход<span>.</span><span>.</span><span>.</span></span>
+      </button>
+    </form>
+  </div>
+</div>

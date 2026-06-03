@@ -1,0 +1,373 @@
+<div class="admin-dashboard">
+
+  <nav class="navbar">
+    <div class="navbar-brand"><h1>Панель Администратора</h1></div>
+    <div class="navbar-menu">
+      <button class="btn-logout" (click)="logout()">Выйти</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab === 'create-plan'" (click)="setActiveTab('create-plan')">Создать план</button>
+      <button class="tab" [class.active]="activeTab === 'users'" (click)="setActiveTab('users')">Пользователи</button>
+      <button class="tab" [class.active]="activeTab === 'plans'" (click)="setActiveTab('plans')">Все планы</button>
+      <button class="tab" [class.active]="activeTab === 'completed'" (click)="setActiveTab('completed')">Выполненные задачи</button>
+      <a class="tab" routerLink="/admin/meters">База счётчиков</a>
+      <a class="tab" routerLink="/admin/catalog">Справочник 1С</a>
+      <a class="tab" routerLink="/admin/reports">Отчёты</a>
+    </div>
+
+    <div class="tab-content">
+
+      <!-- ── СОЗДАНИЕ ПЛАНА ── -->
+      <div *ngIf="activeTab === 'create-plan'" class="create-plan-section">
+        <h2>Создание плана для пользователя</h2>
+        <form #planForm="ngForm" (ngSubmit)="createPlan()">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="userId">Выберите пользователя *</label>
+              <select id="userId" name="userId" [(ngModel)]="planData.userId"
+                      (ngModelChange)="onUserSelected()" required class="form-control">
+                <option value="0" disabled>Выберите пользователя</option>
+                <option *ngFor="let user of users" [value]="user.id">
+                  {{ user.username }} — {{ user.region }} ({{ user.email }})
+                </option>
+              </select>
+            </div>
+            <!--Выберите тип заявления-->
+            <div class="form-group">
+              <label for="documentType">Тип документа *</label>
+              <select id="documentType" name="documentType" 
+                      [(ngModel)]="planData.documentType"
+                      required class="form-control">
+                <option value="" disabled>Выберите тип</option>
+                <option value="По акту">По акту</option>
+                <option value="По заявлению">По заявлению</option>
+                <option value="Плановая">Плановая</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="region">Регион</label>
+              <input type="text" id="region" name="region"
+                     [(ngModel)]="planData.region" class="form-control"
+                     placeholder="Выберите пользователя выше"
+                     [disabled]="true" readonly />
+              <small class="onec-hint" *ngIf="planData.region">Регион взят из профиля пользователя</small>
+            </div>
+            <div class="form-group">
+              <label for="tp">ТП *</label>
+              <input type="text" id="tp" name="tp" [(ngModel)]="planData.tp"
+                     required class="form-control" placeholder="ЖА 584" [disabled]="true"/>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="licevoy">Лицевой счет *</label>
+              <div class="input-with-btn">
+                <input type="text" id="licevoy" name="licevoy" [(ngModel)]="planData.licevoy"
+                       required class="form-control" placeholder="Например: 01005840177"/>
+                <button type="button" class="btn-onec" (click)="fetchFromOnec()"
+                        [disabled]="!planData.licevoy || loadingOnec">
+                  {{ loadingOnec ? 'Загрузка...' : '🔄 Из 1С' }}
+                </button>
+              </div>
+              <small *ngIf="onecData" class="onec-success">Данные из 1С загружены и подставлены</small>
+              <small *ngIf="!onecData && planData.licevoy" class="onec-hint">Нажмите "Из 1С" для автозаполнения</small>
+            </div>
+            <div class="form-group">
+              <label for="tip">Тип счетчика *</label>
+              <input type="text" id="tip" name="tip" [(ngModel)]="planData.tip"
+                     required class="form-control" placeholder="Например: DTS27" [disabled]="true"/>
+            </div>
+            <div class="form-group">
+              <label for="nomerSchetchika">Номер счетчика *</label>
+              <input type="text" id="nomerSchetchika" name="nomerSchetchika"
+                     [(ngModel)]="planData.nomerSchetchika"
+                     required class="form-control" placeholder="Например: 084253002990" [disabled]="true"/>
+            </div>
+          </div>
+
+          <!-- ФИО и Адрес из 1С -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fio">ФИО абонента</label>
+              <input type="text" id="fio" name="fio" [(ngModel)]="planData.fio"
+                     class="form-control" placeholder="Подставится из 1С" [disabled]="true"/>
+            </div>
+            <div class="form-group">
+              <label for="adres">Адрес</label>
+              <input type="text" id="adres" name="adres" [(ngModel)]="planData.adres"
+                     class="form-control" placeholder="Подставится из 1С" [disabled]="true"/>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="pokazaniya">Показания *</label>
+              <input type="number" id="pokazaniya" name="pokazaniya"
+                     [(ngModel)]="planData.pokazaniya" required step="0.1"
+                     class="form-control" placeholder="Например: 1920.5" [disabled]="true"/>
+            </div>
+            <div class="form-group">
+              <label for="data">Дата *</label>
+              <input type="date" id="data" name="data" [(ngModel)]="planData.data"
+                     required class="form-control" [disabled]="true"/>
+            </div>
+          </div>
+
+          <div class="success-message" *ngIf="successMessage">{{ successMessage }}</div>
+          <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+          <button type="submit" class="btn-primary" [disabled]="!planForm.valid">Создать план</button>
+        </form>
+      </div>
+
+      <!-- ── ПОЛЬЗОВАТЕЛИ ── -->
+      <div *ngIf="activeTab === 'users'" class="users-section">
+        <div class="section-header">
+          <h2>Все пользователи</h2>
+          <button class="btn-add" (click)="openCreateUserModal()">Добавить пользователя</button>
+        </div>
+        <div class="users-grid">
+          <div class="user-card" *ngFor="let user of users">
+            <div class="user-header">
+              <h3>{{ user.username }}</h3>
+              <span class="user-role" [class.admin]="user.roles[0]?.name === 'ADMIN'">
+                {{ user.roles[0]?.name }}
+              </span>
+            </div>
+            <p class="user-email">{{ user.email }}</p>
+            <p class="user-region">
+              <span class="region-badge">{{ user.region || '—' }}</span>
+            </p>
+            <button class="btn-delete" (click)="deleteUser(user.id, user.username)"
+                    *ngIf="user.roles[0]?.name !== 'ADMIN' || users.length > 1">Удалить</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ВСЕ ПЛАНЫ ── -->
+      <div *ngIf="activeTab === 'plans'" class="plans-section">
+        <h2>Все планы</h2>
+        <div class="section-actions">
+          <button class="btn-export" (click)="downloadExcel('plans')">Скачать Excel</button>
+        </div>
+        <div class="plans-table-container">
+          <input type="text" [(ngModel)]="searchPlans" (ngModelChange)="currentPlanPage = 1"
+                 placeholder="Поиск по планам..." class="form-control"
+                 style="margin-bottom: 12px; max-width: 400px;" />
+          <table class="plans-table">
+            <thead>
+              <tr>
+                <th>Пользователь</th>
+                <th>Регион</th>
+                <th>ТП</th>
+                <th>Лицевой</th>
+                <th>ФИО</th>
+                <th>Адрес</th>
+                <th>Тип</th>
+                <th>Номер счетчика</th>
+                <th>Показания</th>
+                <th>Дата</th>
+                <th>Статус</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let plan of paginatedPlans">
+                <td>{{ plan.user?.username }}</td>
+                <td>{{ plan.region }}</td>
+                <td>{{ plan.tp }}</td>
+                <td>{{ plan.licevoy }}</td>
+                <td>{{ plan.fio || '—' }}</td>
+                <td>{{ plan.adres || '—' }}</td>
+                <td>{{ plan.tip }}</td>
+                <td>{{ plan.nomerSchetchika }}</td>
+                <td>{{ plan.pokazaniya }}</td>
+                <td>{{ plan.data | date: 'dd.MM.yyyy' }}</td>
+                <td>
+                  <span class="status" [class.completed]="plan.completed">
+                    {{ plan.completed ? 'Выполнено' : 'В работе' }}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn-table-delete" (click)="deletePlan(plan.id)"
+                          [disabled]="plan.completed"
+                          [title]="plan.completed ? 'Нельзя удалить выполненный план' : 'Удалить план'">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination-bar" *ngIf="totalPlanPages >= 1">
+          <button class="page-btn" (click)="currentPlanPage=1" [disabled]="currentPlanPage===1">«</button>
+          <button class="page-btn" (click)="currentPlanPage=currentPlanPage-1" [disabled]="currentPlanPage===1">‹</button>
+          <button *ngFor="let page of visiblePlanPages" class="page-btn"
+                  [class.active]="page === currentPlanPage" (click)="currentPlanPage = page">
+            {{ page }}
+          </button>
+          <button class="page-btn" (click)="currentPlanPage=currentPlanPage+1" [disabled]="currentPlanPage===totalPlanPages">›</button>
+          <button class="page-btn" (click)="currentPlanPage=totalPlanPages" [disabled]="currentPlanPage===totalPlanPages">»</button>
+          <span class="page-info">{{ currentPlanPage }} / {{ totalPlanPages }} ({{ filteredPlans.length }} записей)</span>
+        </div>
+      </div>
+
+      <!-- ── ВЫПОЛНЕННЫЕ ЗАДАЧИ ── -->
+      <div *ngIf="activeTab === 'completed'" class="completed-section">
+        <h2>Выполненные задачи</h2>
+        <div class="section-actions">
+          <button class="btn-export" (click)="downloadExcel('completed-tasks')">Скачать Excel</button>
+          <input type="text" [(ngModel)]="searchCompleted" (ngModelChange)="currentCompletedPage = 1"
+                 placeholder="Поиск по выполненным задачам..." class="form-control"
+                 style="margin-top: 12px; margin-bottom: 12px; max-width: 400px; display: block;" />
+        </div>
+        <div class="completed-table-container">
+          <table class="completed-table">
+            <thead>
+              <tr>
+                <th>Пользователь</th>
+                <th>Регион</th>
+                <th>ТП</th>
+                <th>Лицевой</th>
+                <th>Тип</th>
+                <th>ФИО</th>
+                <th>Адрес</th>
+                <th>Старый счётчик</th>
+                <th>Показания (старый)</th>
+                <th>Новый счётчик</th>
+                <!-- ✅ ИСПРАВЛЕНО: newPhases / newAmperage -->
+                <th>Фазность</th>
+                <th>Ампер</th>
+                <th>Знач.</th>
+                <th>Дата</th>
+                <th>Пломба гос.</th>
+                <th>Одноразовая пломба</th>
+                <th>На крышке</th>
+                <th>На ящике</th>
+                <th>Номер SIM</th>
+                <th>ICCID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let task of paginatedCompleted">
+                <td>{{ task.user?.username }}</td>
+                <td>{{ task.region }}</td>
+                <td>{{ task.tp }}</td>
+                <td>{{ task.licevoy }}</td>
+                <td>{{ task.tip }}</td>
+                <td>{{ task.fio || '—' }}</td>
+                <td>{{ task.adres || '—' }}</td>
+                <td>{{ task.oldNomerSchetchika || task.nomerSchetchika }}</td>
+                <td>{{ task.oldPokazaniya ?? task.pokazaniya }}</td>
+                <td>{{ task.nomerSchetchika }}</td>
+                <!-- ✅ ИСПРАВЛЕНО: task.newPhases и task.newAmperage -->
+                <td>{{ task.phases ?? '—' }}</td>
+                <td>{{ task.amperage ? task.amperage + ' А' : '—' }}</td>
+                <td>{{ task.znch ?? '—' }}</td>
+                <td>{{ task.data | date: 'dd.MM.yyyy' }}</td>
+                <td>{{ task.plombaGos || '—' }}</td>
+                <td><span class="highlight">{{ task.nomerPlomby }}</span></td>
+                <td>{{ task.naKryshke || '—' }}</td>
+                <td>{{ task.naYashike || '—' }}</td>
+                <td><span class="highlight">{{ task.nomerSimKarty }}</span></td>
+                <td><span class="highlight">{{ task.nomerIccid }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination-bar" *ngIf="totalCompletedPages >= 1">
+          <button class="page-btn" (click)="currentCompletedPage=1" [disabled]="currentCompletedPage===1">«</button>
+          <button class="page-btn" (click)="currentCompletedPage=currentCompletedPage-1" [disabled]="currentCompletedPage===1">‹</button>
+          <button *ngFor="let page of visibleCompletedPages" class="page-btn"
+                  [class.active]="page === currentCompletedPage" (click)="currentCompletedPage = page">
+            {{ page }}
+          </button>
+          <button class="page-btn" (click)="currentCompletedPage=currentCompletedPage+1" [disabled]="currentCompletedPage===totalCompletedPages">›</button>
+          <button class="page-btn" (click)="currentCompletedPage=totalCompletedPages" [disabled]="currentCompletedPage===totalCompletedPages">»</button>
+          <span class="page-info">{{ currentCompletedPage }} / {{ totalCompletedPages }} ({{ filteredCompleted.length }} записей)</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── МОДАЛЬНОЕ ОКНО: СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ ── -->
+  <div class="modal-overlay" *ngIf="showCreateUserModal" (click)="closeCreateUserModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Создать пользователя</h3>
+        <button class="close-btn" (click)="closeCreateUserModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <form #userForm="ngForm" (ngSubmit)="createUser()">
+          <div class="form-group">
+            <label for="username">Имя пользователя *</label>
+            <input type="text" id="username" name="username"
+                   [(ngModel)]="newUserData.username" required
+                   class="form-control" placeholder="Введите имя"/>
+          </div>
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email"
+                   [(ngModel)]="newUserData.email" required email
+                   class="form-control" placeholder="Введите email"/>
+          </div>
+          <div class="form-group">
+            <label for="password">Пароль *</label>
+            <div class="password-input-wrapper">
+              <input [type]="showPasswordInModal ? 'text' : 'password'"
+                     id="password" name="password"
+                     [(ngModel)]="newUserData.password" required
+                     class="form-control" placeholder="Введите пароль"/>
+              <button type="button" class="password-toggle-btn"
+                      (click)="togglePasswordInModal()" tabindex="-1">
+                <svg *ngIf="!showPasswordInModal" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg *ngIf="showPasswordInModal" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="role">Роль *</label>
+            <select id="role" name="role" [(ngModel)]="newUserData.role"
+                    required class="form-control">
+              <option value="USER">USER</option>
+              <option value="ADMIN">ADMIN</option>
+              <option value="ADMIN_RES">ADMIN_RES</option> 
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="userRegion">Регион *</label>
+            <select id="userRegion" name="userRegion"
+                    [(ngModel)]="newUserData.region"
+                    required class="form-control">
+              <option value="" disabled>Выберите регион</option>
+              <option *ngFor="let r of regions" [value]="r">{{ r }}</option>
+            </select>
+            <small class="field-hint">Пользователь будет получать задачи только своего региона</small>
+          </div>
+          <div class="success-message" *ngIf="successMessage">{{ successMessage }}</div>
+          <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" (click)="closeCreateUserModal()">Отмена</button>
+            <button type="submit" class="btn-save" [disabled]="!userForm.valid">Создать</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

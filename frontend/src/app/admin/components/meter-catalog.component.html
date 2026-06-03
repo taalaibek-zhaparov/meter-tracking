@@ -1,0 +1,219 @@
+<div class="catalog-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-left">
+      <a routerLink="/admin" class="btn-back">← Панель администратора</a>
+      <h2>Справочник счётчиков</h2>
+      <div class="stats">
+        <span class="stat-badge models">Моделей: {{ allModels.length }}</span>
+        <span class="stat-badge specs">Вариантов: {{ totalSpecsCount }}</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-import-1c" (click)="openImportModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Импорт из 1С
+      </button>
+    </div>
+  </div>
+
+  <!-- УВЕДОМЛЕНИЯ -->
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="alert alert-error"   *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <!-- ПОИСК -->
+  <div class="search-row">
+    <div class="search-box">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" [(ngModel)]="searchQuery" (input)="applySearch()"
+             placeholder="Поиск по наименованию или коду 1С..." class="search-input"/>
+      <button *ngIf="searchQuery" class="clear-btn" (click)="searchQuery=''; applySearch()">✕</button>
+    </div>
+    <span class="results-count" *ngIf="searchQuery">Найдено: {{ filteredModels.length }}</span>
+  </div>
+
+  <!-- ЗАГРУЗКА -->
+  <div class="loading-row" *ngIf="loading">
+    <div class="spinner"></div><span>Загрузка справочника...</span>
+  </div>
+
+  <!-- ПУСТОЙ СПРАВОЧНИК -->
+  <div class="empty-state" *ngIf="!loading && filteredModels.length === 0">
+    <div class="empty-icon">📋</div>
+    <p *ngIf="!searchQuery">Справочник пуст. Импортируйте данные из 1С.</p>
+    <p *ngIf="searchQuery">Модель «{{ searchQuery }}» не найдена.</p>
+    <button class="btn btn-import-1c" *ngIf="!searchQuery" (click)="openImportModal()">
+      Импортировать из 1С
+    </button>
+  </div>
+
+  <!-- ТАБЛИЦА МОДЕЛЕЙ -->
+  <div class="table-wrapper" *ngIf="!loading && filteredModels.length > 0">
+    <table class="catalog-table">
+      <thead>
+        <tr>
+          <th>Наименование модели</th>
+          <th>Код 1С</th>
+          <th>Вариантов</th>
+          <th>Исполнения</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let model of paginatedModels">
+          <!-- СТРОКА МОДЕЛИ -->
+          <tr class="model-row" (click)="openModel(model)"
+              [class.expanded]="selectedModel?.id === model.id">
+            <td class="name-cell">
+              <span class="expand-icon">{{ selectedModel?.id === model.id ? '▼' : '▶' }}</span>
+              <strong>{{ model.name }}</strong>
+            </td>
+            <td><code class="code-badge">{{ model.code }}</code></td>
+            <td>
+              <span class="spec-count-badge">{{ model.specs.length || 0 }}</span>
+            </td>
+            <td class="specs-preview">
+              <span *ngFor="let s of (model.specs || []).slice(0, 2)" class="spec-chip-mini">
+                {{ s.phase === 1 ? '1ф' : '3ф' }} · {{ s.amp }}
+              </span>
+              <span *ngIf="(model.specs.length || 0) > 2" class="spec-chip-mini more">
+                +{{ (model.specs.length || 0) - 2 }} ещё
+              </span>
+            </td>
+          </tr>
+
+          <!-- РАСКРЫТЫЕ ВАРИАНТЫ ИСПОЛНЕНИЯ -->
+          <tr *ngIf="selectedModel?.id === model.id" class="specs-row">
+            <td colspan="4">
+              <div class="specs-detail">
+                <div class="specs-title">Варианты исполнения ({{ model.specs.length || 0 }}):</div>
+                <div class="specs-grid">
+                  <div class="spec-card" *ngFor="let spec of model.specs">
+                    <div class="spec-row">
+                      <span class="spec-label">Фазность</span>
+                      <span class="spec-val phase">{{ spec.phase === 1 ? '1-фазный' : '3-фазный' }}</span>
+                    </div>
+                    <div class="spec-row">
+                      <span class="spec-label">Ток</span>
+                      <span class="spec-val">{{ spec.amp }}</span>
+                    </div>
+                    <div class="spec-row">
+                      <span class="spec-label">Значность</span>
+                      <span class="spec-val">{{ spec.digits }} знаков</span>
+                    </div>
+                    <div class="spec-row">
+                      <span class="spec-label">Напряжение</span>
+                      <span class="spec-val">{{ spec.voltage }}</span>
+                    </div>
+                  </div>
+                  <div class="no-specs" *ngIf="!model.specs.length">
+                    Варианты исполнения не указаны
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ПАГИНАЦИЯ -->
+  <div class="pagination-bar" *ngIf="totalPages > 1">
+    <button class="page-btn" (click)="currentPage=1"             [disabled]="currentPage===1">«</button>
+    <button class="page-btn" (click)="currentPage=currentPage-1" [disabled]="currentPage===1">‹</button>
+    <span class="page-info">{{ currentPage }} / {{ totalPages }} ({{ filteredModels.length }} моделей)</span>
+    <button class="page-btn" (click)="currentPage=currentPage+1" [disabled]="currentPage===totalPages">›</button>
+    <button class="page-btn" (click)="currentPage=totalPages"    [disabled]="currentPage===totalPages">»</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     МОДАЛЬНОЕ ОКНО: ИМПОРТ ИЗ 1С
+═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showImportModal" (click)="closeImportModal()">
+  <div class="import-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>Импорт справочника из 1С</h3>
+      <button class="close-btn" (click)="closeImportModal()">✕</button>
+    </div>
+
+    <div class="modal-body" *ngIf="!importResult">
+
+      <div class="import-hint">
+        <strong>Формат JSON из 1С:</strong> поле <code>items</code> — массив записей
+        с ключами <code>Код</code>, <code>Наименование</code>, <code>Ампер</code>,
+        <code>Значность</code>, <code>Фазность</code>, <code>Напряжение</code>.
+      </div>
+
+      <div class="import-actions-top">
+        <button class="btn btn-example" (click)="loadExampleJson()">Вставить пример</button>
+        <button class="btn btn-file"    (click)="triggerJsonFile()">Загрузить файл .json</button>
+        <input #jsonFileInput type="file" accept=".json" style="display:none"
+               (change)="onJsonFileSelected($event)">
+      </div>
+
+      <textarea class="json-textarea"
+                [(ngModel)]="importJsonText"
+                placeholder='{"items": [{"Код": "МЕР-001", "Наименование": "Меркурий 201", ...}]}'
+                rows="14">
+      </textarea>
+
+      <div class="import-error" *ngIf="importError">⚠️ {{ importError }}</div>
+
+      <div class="modal-footer">
+        <button class="btn btn-cancel" (click)="closeImportModal()">Отмена</button>
+        <button class="btn btn-run-import" (click)="runImport()"
+                [disabled]="!importJsonText.trim() || importLoading">
+          <span *ngIf="importLoading" class="spinner-sm"></span>
+          {{ importLoading ? 'Импорт...' : 'Запустить импорт' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- РЕЗУЛЬТАТ ИМПОРТА -->
+    <div class="modal-body import-result" *ngIf="importResult">
+      <div class="result-icon">✅</div>
+      <h4>Импорт завершён</h4>
+
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="result-num">{{ importResult.totalReceived }}</div>
+          <div class="result-label">Получено записей</div>
+        </div>
+        <div class="result-card created">
+          <div class="result-num">{{ importResult.modelsCreated }}</div>
+          <div class="result-label">Новых моделей</div>
+        </div>
+        <div class="result-card skipped">
+          <div class="result-num">{{ importResult.modelsSkipped }}</div>
+          <div class="result-label">Моделей пропущено</div>
+        </div>
+        <div class="result-card created">
+          <div class="result-num">{{ importResult.specsCreated }}</div>
+          <div class="result-label">Новых вариантов</div>
+        </div>
+        <div class="result-card skipped">
+          <div class="result-num">{{ importResult.specsSkipped }}</div>
+          <div class="result-label">Вариантов пропущено</div>
+        </div>
+        <div class="result-card" [class.invalid]="importResult.specsInvalid > 0">
+          <div class="result-num">{{ importResult.specsInvalid }}</div>
+          <div class="result-label">Ошибок</div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-run-import" (click)="closeImportModal()">Закрыть</button>
+        <button class="btn btn-example" (click)="importResult = null">Импортировать ещё</button>
+      </div>
+    </div>
+  </div>
+</div>

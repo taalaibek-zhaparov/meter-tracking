@@ -1,0 +1,240 @@
+/* ═══════════════════════════════════════════════
+   LOGIN — Clean Light Design
+═══════════════════════════════════════════════ */
+
+* { box-sizing: border-box; }
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f4f8;
+  padding: 20px;
+}
+
+/* ── КАРТОЧКА ── */
+.login-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px 36px 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow:
+    0 4px 6px rgba(0,0,0,0.04),
+    0 12px 40px rgba(0,0,0,0.08),
+    0 0 0 1px rgba(37,99,235,0.08);
+  animation: fadeUp 0.5s ease-out;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* ── БРЕНД ── */
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.brand-logo {
+  flex-shrink: 0;
+  width: 110px;        /* было 90px */
+  height: 110px;       /* было 90px */
+  background: #fff;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;                    /*1.5px solid #dbeafe;*/
+  overflow: hidden;
+  padding: 0;       /* было 4px */
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brand-text { display: flex; flex-direction: column; gap: 1px; }
+
+/* Обе строки — одинаковый синий цвет */
+.brand-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #1d4ed8;
+  line-height: 1.25;
+  letter-spacing: -0.2px;
+}
+
+.brand-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d4ed8;   /* ← тот же синий что и brand-name */
+  line-height: 1.4;
+}
+
+.brand-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+/* ── РАЗДЕЛИТЕЛЬ ── */
+.divider {
+  height: 1.5px;
+  background: linear-gradient(to right, #dbeafe, #e2e8f0, #dbeafe);
+  border-radius: 1px;
+  margin-bottom: 28px;
+}
+
+/* ── ПОЛЯ ── */
+.form-group { margin-bottom: 16px; }
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-icon {
+  position: absolute;
+  left: 16px;
+  color: #94a3b8;
+  pointer-events: none;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.field-input {
+  width: 100%;
+  padding: 15px 48px 15px 48px;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 15px;
+  color: #1e293b;
+  background: #f8fafc;
+  transition: all 0.2s;
+  outline: none;
+  font-family: inherit;
+}
+
+.field-input::placeholder { color: #94a3b8; }
+
+.field-input:focus {
+  border-color: #2563eb;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+}
+
+.input-wrap:focus-within .field-icon { color: #2563eb; }
+
+/* Скрываем системные иконки автозаполнения */
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button { display: none !important; }
+
+/* ── КНОПКА ПОКАЗАТЬ ПАРОЛЬ ── */
+.eye-btn {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  color: #94a3b8;
+  border-radius: 8px;
+  transition: color 0.2s, background 0.2s;
+}
+.eye-btn:hover { color: #2563eb; background: #eff6ff; }
+
+/* ── ОШИБКА ── */
+.error-box {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  text-align: center;
+  animation: shake 0.4s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-8px); }
+  75%       { transform: translateX(8px); }
+}
+
+/* ── КНОПКА ВОЙТИ ── */
+.btn-login {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.btn-login::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+.btn-login:hover:not(:disabled)::after { left: 100%; }
+
+.btn-login:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37,99,235,0.45);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.btn-login:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+}
+
+.btn-login:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ── АНИМАЦИЯ ЗАГРУЗКИ ── */
+.loading-dots span { animation: blink 1.2s infinite; opacity: 0; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 100% { opacity: 0; }
+  50%       { opacity: 1; }
+}
+
+/* ── МОБИЛЬНАЯ АДАПТИВНОСТЬ ── */
+@media (max-width: 480px) {
+  .login-card  { padding: 32px 24px 28px; border-radius: 20px; }
+  .brand-name  { font-size: 15px; }
+  .brand-sub   { font-size: 12px; }
+  .btn-login   { padding: 14px; }
+}

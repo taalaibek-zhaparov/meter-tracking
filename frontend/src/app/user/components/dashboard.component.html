@@ -1,0 +1,34 @@
+<div class="dashboard">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <h1> Учет Счетчиков</h1>
+    </div>
+    <div class="navbar-menu">
+      <button class="btn-logout" (click)="logout()">Выйти</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="tabs">
+      <button
+        class="tab"
+        [class.active]="activeTab === 'tasks'"
+        (click)="setActiveTab('tasks')"
+      >
+         Мои задачи
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab === 'completed'"
+        (click)="setActiveTab('completed')"
+      >
+         Выполненные задачи
+      </button>
+    </div>
+
+    <div class="tab-content">
+      <app-my-tasks *ngIf="activeTab === 'tasks'"></app-my-tasks>
+      <app-completed-tasks *ngIf="activeTab === 'completed'"></app-completed-tasks>
+    </div>
+  </div>
+</div>

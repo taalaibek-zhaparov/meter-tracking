@@ -1,0 +1,292 @@
+<div class="my-tasks">
+  <div class="page-header-row">
+    <h2>Мои задачи</h2>
+    <div class="export-btns">
+      <button class="btn-export" (click)="downloadExcel('plans')">Скачать мои планы</button>
+      <button class="btn-export" (click)="downloadExcel('completed')">Скачать выполненные</button>
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <div class="spinner"></div><span>Загрузка задач...</span>
+  </div>
+
+  <div class="no-tasks" *ngIf="!loading && tasks.length === 0">
+    <p>У вас пока нет активных задач</p>
+  </div>
+
+  <!-- ТАБЛИЦА ЗАДАЧ -->
+  <div class="table-wrap" *ngIf="!loading && tasks.length > 0">
+    <!-- Поиск + счётчик -->
+    <div class="table-toolbar">
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearch()"
+               placeholder="Поиск по лицевому, счётчику, ФИО, типу..." class="search-input"/>
+        <button *ngIf="searchQuery" class="clear-btn" (click)="searchQuery=''; onSearch()">✕</button>
+      </div>
+      <div class="tasks-count">
+        Показано: <strong>{{ filteredTasks.length }}</strong> из {{ tasks.length }}
+      </div>
+    </div>
+    <table class="tasks-table">
+      <thead>
+        <tr>
+          <th>№</th>
+          <th>Регион / ТП</th>
+          <th>Лицевой</th>
+          <th>ФИО</th>
+          <th>Адрес</th>
+          <th>Тип счётчика</th>
+          <th>Номер счётчика</th>
+          <th>Показания</th>
+          <th>Дата</th>
+          <th>Действие</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let task of paginatedTasks; let i = index">
+          <td class="num-col">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+          <td>
+            <div class="region-tp">
+              <span class="region-badge">{{ task.region }}</span>
+              <span class="tp-text">ТП {{ task.tp }}</span>
+            </div>
+          </td>
+          <td class="licevoy-col"><strong>{{ task.licevoy }}</strong></td>
+          <td>{{ task.fio || '—' }}</td>
+          <td class="adres-col">{{ task.adres || '—' }}</td>
+          <td>
+            <span class="meter-type-badge">{{ task.tip }}</span>
+          </td>
+          <td class="meter-num-col">{{ task.nomerSchetchika }}</td>
+          <td class="num-col">{{ task.pokazaniya }}</td>
+          <td class="date-col">{{ task.data | date:'dd.MM.yyyy' }}</td>
+          <td>
+            <button class="btn-complete-row" (click)="openCompleteModal(task)">
+              Выполнить
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Пагинация -->
+    <div class="pagination-bar" *ngIf="totalPages > 1">
+      <button class="page-btn" (click)="currentPage=1"            [disabled]="currentPage===1">«</button>
+      <button class="page-btn" (click)="currentPage=currentPage-1" [disabled]="currentPage===1">‹</button>
+      <button *ngFor="let p of visiblePages" class="page-btn"
+              [class.active]="p===currentPage" (click)="currentPage=p">{{ p }}</button>
+      <button class="page-btn" (click)="currentPage=currentPage+1" [disabled]="currentPage===totalPages">›</button>
+      <button class="page-btn" (click)="currentPage=totalPages"    [disabled]="currentPage===totalPages">»</button>
+      <span class="page-info">{{ currentPage }} / {{ totalPages }} ({{ filteredTasks.length }} записей)</span>
+    </div>
+  </div>
+</div>
+
+<!-- Modal — не трогаем, оставляем как есть -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>Выполнение задачи</h3>
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedTask">
+      <form #completeForm="ngForm" (ngSubmit)="completeTask()">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Регион *</label>
+            <input type="text" name="region" [(ngModel)]="completedTaskData.region" required class="form-control" [readonly]="true" />
+          </div>
+          <div class="form-group">
+            <label>ТП *</label>
+            <input type="text" name="tp" [(ngModel)]="completedTaskData.tp" required class="form-control" [readonly]="true" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Лицевой счет *</label>
+            <input type="text" name="licevoy" [(ngModel)]="completedTaskData.licevoy" required class="form-control" [readonly]="true" />
+          </div>
+          <div class="form-group">
+            <label>Тип счетчика *</label>
+            <input type="text" name="tip" [(ngModel)]="completedTaskData.tip" required class="form-control" [readonly]="true" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>ФИО абонента</label>
+            <input type="text" name="fio" [(ngModel)]="completedTaskData.fio" class="form-control readonly-field" [readonly]="true" placeholder="Загружается из 1С" />
+          </div>
+          <div class="form-group">
+            <label>Адрес</label>
+            <input type="text" name="adres" [(ngModel)]="completedTaskData.adres" class="form-control readonly-field" [readonly]="true" placeholder="Загружается из 1С" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Старый номер счетчика</label>
+            <input type="text" name="oldNomerSchetchika" [(ngModel)]="completedTaskData.oldNomerSchetchika" class="form-control readonly-field" [readonly]="true" placeholder="Загружается из 1С" />
+          </div>
+          <div class="form-group">
+            <label>Показания старого счетчика *</label>
+            <input type="number" name="oldPokazaniya" [(ngModel)]="completedTaskData.oldPokazaniya" required min="0" step="0.1" class="form-control" />
+            <small class="field-hint">Не может быть отрицательным</small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Новый номер счетчика *</label>
+            <div class="meter-search-wrapper">
+              <div class="input-container">
+                <input type="text" name="nomerSchetchika" [(ngModel)]="completedTaskData.nomerSchetchika" required class="form-control"
+                  placeholder="Введите или отсканируйте номер..." (input)="onNewMeterNumberInput()" autocomplete="off" />
+                <button type="button" class="btn-scan-inside" (click)="openMeterScanner()">
+                  <div class="scan-icon"><div class="scan-line"></div></div>
+                </button>
+              </div>
+              <div class="meter-dropdown" *ngIf="meterSearchResults.length > 0">
+                <div class="meter-option" *ngFor="let m of meterSearchResults" (click)="selectMeterFromSearch(m)">
+                  <div class="meter-option-main">{{ m.meterNumber }}</div>
+                  <div class="meter-option-sub">
+                    {{ m.meterType }}
+                    <span *ngIf="m.meterModelName" class="catalog-badge">📋 {{ m.meterModelName }}</span>
+                    | SIM: {{ m.simCardNumber }}
+                  </div>
+                  <div class="meter-option-specs" *ngIf="m.phases || m.amperage || m.znch">
+                    <span *ngIf="m.phases">{{ m.phases === 1 ? "1-фаз" : "3-фаз" }}</span>
+                    <span *ngIf="m.amperage">· {{ m.amperage }} А</span>
+                    <span *ngIf="m.znch">· {{ m.znch }} знаков</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="selected-meter-info" *ngIf="meterSelectedFromDb && completedTaskData.nomerSchetchika">
+              ✅ Счётчик выбран: <strong>{{ completedTaskData.nomerSchetchika }}</strong> — характеристики подставлены автоматически
+            </div>
+            <small class="hint-text" *ngIf="!meterSelectedFromDb">При выборе счётчика — тип, SIM и ICCID подставятся автоматически</small>
+            <small class="field-error" *ngIf="completedTaskData.nomerSchetchika && !meterSelectedFromDb && meterSearchResults.length === 0">
+              ⚠ Выберите счётчик из списка
+            </small>
+          </div>
+          <div class="form-group">
+            <label>Показания нового счетчика *</label>
+            <input type="number" name="newPokazaniya" [(ngModel)]="completedTaskData.newPokazaniya" required min="0" step="0.1" class="form-control" />
+            <small class="field-hint">Не может быть отрицательным</small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Фазность</label>
+            <input type="number" name="newPhases" [(ngModel)]="completedTaskData.newPhases" class="form-control readonly-field" [readonly]="true" placeholder="Подставится автоматически" />
+          </div>
+          <div class="form-group">
+            <label>Ампер</label>
+            <input type="number" name="newAmperage" [(ngModel)]="completedTaskData.newAmperage" class="form-control readonly-field" [readonly]="true" placeholder="Подставится автоматически" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Значность</label>
+            <input type="number" name="znch" [(ngModel)]="completedTaskData.znch" class="form-control readonly-field" [readonly]="true" placeholder="Подставится автоматически" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Дата *</label>
+          <input type="date" name="data" [(ngModel)]="completedTaskData.data" required [max]="getTodayDate()" class="form-control" />
+          <small class="field-hint">Не может быть в будущем</small>
+        </div>
+
+        <hr class="divider">
+        <h4 class="section-title">Дополнительные данные:</h4>
+
+        <div class="form-group">
+          <label>Пломба гос. *</label>
+          <select name="plombaGosPrefix" [(ngModel)]="plombaGosPrefix" required class="form-control" (ngModelChange)="updatePlombaGos()">
+            <option value="" disabled>Выберите</option>
+            <option value="2026/1">2026/1</option>
+            <option value="2026/2">2026/2</option>
+            <option value="2026/3">2026/3</option>
+            <option value="2026/4">2026/4</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Одноразовая пломба *</label>
+          <input type="text" name="nomerPlomby" [(ngModel)]="completedTaskData.nomerPlomby" required class="form-control" placeholder="Введите номер одноразовой пломбы" />
+        </div>
+
+        <div class="form-group">
+          <label>На крышке *</label>
+          <input type="text" name="naKryshke" [(ngModel)]="completedTaskData.naKryshke" required class="form-control" placeholder="Введите значение" />
+        </div>
+
+        <div class="form-group">
+          <label>На ящике *</label>
+          <input type="text" name="naYashike" [(ngModel)]="completedTaskData.naYashike" required class="form-control" placeholder="Введите значение" />
+        </div>
+
+        <div class="form-group">
+          <label>Номер SIM-карты *</label>
+          <input type="text" name="nomerSimKarty" [(ngModel)]="completedTaskData.nomerSimKarty" required class="form-control" placeholder="Введите номер SIM-карты" />
+        </div>
+
+        <div class="form-group">
+          <label>Номер ICCID *</label>
+          <input type="text" name="nomerIccid" [(ngModel)]="completedTaskData.nomerIccid" required class="form-control" placeholder="Введите номер ICCID" />
+        </div>
+
+        <hr class="divider">
+        <h4 class="section-title">Подписи сторон:</h4>
+
+        <div class="form-group">
+          <app-signature-pad label="Подпись абонента *" (signatureChange)="onAbonentSignature($event)"></app-signature-pad>
+        </div>
+        <div class="form-group">
+          <app-signature-pad label="Подпись мастера *" (signatureChange)="onMasterSignature($event)"></app-signature-pad>
+        </div>
+
+        <div class="sig-warning" *ngIf="showSignatureWarning">⚠ Пожалуйста, поставьте обе подписи перед сохранением</div>
+        <div class="success-message" *ngIf="successMessage">{{ successMessage }}</div>
+        <div class="error-message"   *ngIf="errorMessage">{{ errorMessage }}</div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="closeModal()">Отмена</button>
+          <button type="submit" class="btn-save" [disabled]="!completeForm.valid || !meterSelectedFromDb || !plombaGosPrefix || !signatureAbonent || !signatureMaster">Сохранить</button>
+        </div>
+
+      </form>
+
+      <div class="scanner-overlay" *ngIf="showMeterScanner">
+        <div class="scanner-modal">
+          <div class="scanner-header">
+            <h4>Сканировать штрих-код</h4>
+            <button type="button" class="close-btn" (click)="closeMeterScanner()">×</button>
+          </div>
+          <div class="scanner-body">
+            <video #scanVideoEl class="scanner-video" autoplay muted playsinline></video>
+            <div class="scanner-frame"></div>
+            <p class="scanner-hint">Наведите камеру на штрих-код счётчика</p>
+            <p class="scanner-error" *ngIf="meterScannerError">{{ meterScannerError }}</p>
+            <div class="manual-scan-input">
+              <input type="text" placeholder="Или введите вручную..." (input)="onManualScanInput($event)" class="form-control" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

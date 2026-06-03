@@ -1,0 +1,248 @@
+<div class="ares-page">
+
+  <!-- NAVBAR -->
+  <nav class="ares-nav">
+    <div class="nav-brand">
+      <div class="nav-region-badge" *ngIf="me">{{ me.region }}</div>
+      <span class="nav-title">Панель Администратора РЭС</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user" *ngIf="me">{{ me.username }}</span>
+      <button class="btn-logout" (click)="logout()">Выйти</button>
+    </div>
+  </nav>
+
+  <div class="ares-container">
+
+    <!-- ВКЛАДКИ -->
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab==='plans'"       (click)="setTab('plans')">Все планы</button>
+      <button class="tab" [class.active]="activeTab==='completed'"   (click)="setTab('completed')">Выполненные задачи</button>
+      <button class="tab" [class.active]="activeTab==='create-plan'" (click)="setTab('create-plan')">Создать план</button>
+    </div>
+
+    <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
+    <div class="alert error"   *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <!-- ═══════════ ВСЕ ПЛАНЫ ═══════════ -->
+    <div *ngIf="activeTab==='plans'">
+      <div class="section-header">
+        <h2>Планы  «{{ me?.region }}»</h2>
+        <div class="header-stats">
+          <span class="stat-chip blue">Всего: {{ plans.length }}</span>
+          <span class="stat-chip green">Выполнено: {{ completedCount }}</span>
+         <span class="stat-chip orange">В работе: {{ pendingCount }}</span>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <input class="search-input" type="text" [(ngModel)]="searchPlans"
+               (ngModelChange)="planPage=1" placeholder="Поиск по лицевому, счётчику, мастеру..."/>
+        <button class="btn-refresh" (click)="loadPlans()">Обновить</button>
+      </div>
+
+      <div class="loading-row" *ngIf="loading">
+        <div class="spinner"></div><span>Загрузка...</span>
+      </div>
+
+      <div class="table-wrap" *ngIf="!loading">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Мастер</th><th>Лицевой</th><th>ФИО</th><th>Адрес</th>
+              <th>Тип</th><th>Номер счётчика</th><th>Показания</th><th>Дата</th>
+              <th>Статус</th><th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of paginatedPlans">
+              <td>{{ p.user?.username || '—' }}</td>
+              <td><strong>{{ p.licevoy }}</strong></td>
+              <td>{{ p.fio || '—' }}</td>
+              <td>{{ p.adres || '—' }}</td>
+              <td>{{ p.tip }}</td>
+              <td>{{ p.nomerSchetchika }}</td>
+              <td>{{ p.pokazaniya }}</td>
+              <td>{{ p.data | date:'dd.MM.yyyy' }}</td>
+              <td>
+                <span class="status-pill" [class.done]="p.completed" [class.pending]="!p.completed">
+                  {{ p.completed ? 'Выполнено' : 'В работе' }}
+                </span>
+              </td>
+              <td>
+                <button class="icon-btn del" (click)="deletePlan(p.id)"
+                        [disabled]="p.completed" title="Удалить">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6M14 11v6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredPlans.length === 0">
+              <td colspan="10" class="empty-cell">Планов нет</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar" *ngIf="totalPlanPages >= 1">
+        <button class="page-btn" (click)="planPage=1"          [disabled]="planPage===1">«</button>
+        <button class="page-btn" (click)="planPage=planPage-1" [disabled]="planPage===1">‹</button>
+        <button *ngFor="let page of visiblePlanPages" class="page-btn"
+                [class.active]="page === planPage" (click)="planPage = page">
+          {{ page }}
+        </button>
+        <button class="page-btn" (click)="planPage=planPage+1" [disabled]="planPage===totalPlanPages">›</button>
+        <button class="page-btn" (click)="planPage=totalPlanPages" [disabled]="planPage===totalPlanPages">»</button>
+        <span class="page-info">{{ planPage }} / {{ totalPlanPages }} ({{ filteredPlans.length }} записей)</span>
+      </div>
+    </div>
+
+    <!-- ═══════════ ВЫПОЛНЕННЫЕ ЗАДАЧИ ═══════════ -->
+    <div *ngIf="activeTab==='completed'">
+      <div class="section-header">
+        <h2>Выполненные задачи «{{ me?.region }}»</h2>
+        <div class="header-stats">
+          <span class="stat-chip green">Всего: {{ completedTasks.length }}</span>
+          <span class="stat-chip blue">Сегодня: {{ todayCompleted }}</span>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <input class="search-input" type="text" [(ngModel)]="searchCompleted"
+               (ngModelChange)="completedPage=1" placeholder="Поиск по лицевому, счётчику, мастеру..."/>
+        <button class="btn-refresh" (click)="loadCompleted()">Обновить</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Мастер</th><th>Лицевой</th><th>ФИО</th>
+              <th>Старый счётчик</th><th>Новый счётчик</th>
+              <th>Тип</th><th>Фаз.</th><th>А</th><th>Дата</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of paginatedCompleted">
+              <td>{{ t.user?.username || '—' }}</td>
+              <td><strong>{{ t.licevoy }}</strong></td>
+              <td>{{ t.fio || '—' }}</td>
+              <td>{{ t.oldNomerSchetchika || t.nomerSchetchika }}</td>
+              <td>{{ t.nomerSchetchika }}</td>
+              <td>{{ t.tip }}</td>
+              <td>{{ t.phases ?? '—' }}</td>
+              <td>{{ t.amperage ? t.amperage + ' А' : '—' }}</td>
+              <td>{{ t.data | date:'dd.MM.yyyy' }}</td>
+            </tr>
+            <tr *ngIf="filteredCompleted.length === 0">
+              <td colspan="9" class="empty-cell">Нет выполненных задач</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar" *ngIf="totalCompletedPages >= 1">
+        <button class="page-btn" (click)="completedPage=1"               [disabled]="completedPage===1">«</button>
+        <button class="page-btn" (click)="completedPage=completedPage-1" [disabled]="completedPage===1">‹</button>
+        <button *ngFor="let page of visibleCompletedPages" class="page-btn"
+                [class.active]="page === completedPage" (click)="completedPage = page">
+          {{ page }}
+        </button>
+        <button class="page-btn" (click)="completedPage=completedPage+1" [disabled]="completedPage===totalCompletedPages">›</button>
+        <button class="page-btn" (click)="completedPage=totalCompletedPages" [disabled]="completedPage===totalCompletedPages">»</button>
+        <span class="page-info">{{ completedPage }} / {{ totalCompletedPages }} ({{ filteredCompleted.length }} записей)</span>
+      </div>
+    </div>
+
+    <!-- ═══════════ СОЗДАТЬ ПЛАН ═══════════ -->
+    <div *ngIf="activeTab==='create-plan'">
+      <div class="section-header">
+        <h2>Создание плана - «{{ me?.region }}»</h2>
+      </div>
+
+      <div class="create-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Выберите мастера *</label>
+            <select class="form-control" [(ngModel)]="planData.userId" (ngModelChange)="onUserSelected()">
+              <option [value]="0" disabled>— выберите мастера —</option>
+              <option *ngFor="let u of users" [value]="u.id">{{ u.username }} ({{ u.email }})</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Тип документа *</label>
+            <select class="form-control" [(ngModel)]="planData.documentType">
+              <option value="" disabled>— выберите тип —</option>
+              <option value="По акту">По акту</option>
+              <option value="По заявлению">По заявлению</option>
+              <option value="Плановая">Плановая</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Регион</label>
+            <input class="form-control" [value]="me?.region || ''" disabled/>
+            <small class="hint">Регион вашего РЭС — подставляется автоматически</small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Лицевой счёт *</label>
+            <div class="input-btn-row">
+              <input class="form-control" [(ngModel)]="planData.licevoy" placeholder="01005840177"/>
+              <button class="btn-onec" (click)="fetchFromOnec()" [disabled]="!planData.licevoy || loadingOnec">
+                {{ loadingOnec ? 'Загрузка...' : 'Из 1С' }}
+              </button>
+            </div>
+            <small class="hint success" *ngIf="onecData">✓ Данные из 1С загружены</small>
+          </div>
+          <div class="form-group">
+            <label>ТП</label>
+            <input class="form-control" [(ngModel)]="planData.tp" disabled/>
+          </div>
+          <div class="form-group">
+            <label>Тип счётчика</label>
+            <input class="form-control" [(ngModel)]="planData.tip" disabled/>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Номер счётчика</label>
+            <input class="form-control" [(ngModel)]="planData.nomerSchetchika" disabled/>
+          </div>
+          <div class="form-group">
+            <label>ФИО абонента</label>
+            <input class="form-control" [(ngModel)]="planData.fio" disabled/>
+          </div>
+          <div class="form-group">
+            <label>Адрес</label>
+            <input class="form-control" [(ngModel)]="planData.adres" disabled/>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Показания</label>
+            <input class="form-control" type="number" [(ngModel)]="planData.pokazaniya" disabled/>
+          </div>
+          <div class="form-group">
+            <label>Дата</label>
+            <input class="form-control" type="date" [(ngModel)]="planData.data" disabled/>
+          </div>
+          <div class="form-group"></div>
+        </div>
+
+        <button class="btn-create" (click)="createPlan()"
+                [disabled]="!planData.userId || planData.userId===0 || !planData.documentType">
+          Создать план
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

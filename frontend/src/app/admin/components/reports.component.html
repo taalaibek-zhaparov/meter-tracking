@@ -1,0 +1,318 @@
+<div class="reports-page">
+
+  <!-- HEADER -->
+  <div class="rp-header">
+    <div class="rp-header-left">
+      <a routerLink="/admin" class="btn-back">← Панель администратора</a>
+      <h2>Управленческий отчёт</h2>
+      <span class="last-updated" *ngIf="lastUpdated">Обновлено: {{ lastUpdated }}</span>
+    </div>
+    <button class="btn-refresh" (click)="load()" [disabled]="loading">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      {{ loading ? 'Загрузка...' : 'Обновить' }}
+    </button>
+  </div>
+
+  <div class="alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="loading-row" *ngIf="loading">
+    <div class="spinner"></div><span>Формирование отчёта...</span>
+  </div>
+
+  <ng-container *ngIf="!loading && dashboard">
+
+    <!-- ═══════════════ KPI БЛОК ═══════════════ -->
+    <div class="kpi-grid">
+      <div class="kpi-card accent-blue">
+        <!-- <div class="kpi-icon">📋</div> -->
+        <div class="kpi-num">{{ kpi.totalPlans }}</div>
+        <div class="kpi-label">Всего планов</div>
+      </div>
+      <div class="kpi-card accent-green">
+        <!-- <div class="kpi-icon">✅</div> -->
+        <div class="kpi-num">{{ kpi.completedPlans }}</div>
+        <div class="kpi-label">Выполнено</div>
+      </div>
+      <div class="kpi-card accent-orange">
+        <!-- <div class="kpi-icon">⏳</div> -->
+        <div class="kpi-num">{{ kpi.pendingPlans }}</div>
+        <div class="kpi-label">В работе</div>
+      </div>
+      <div class="kpi-card"
+           [class.accent-green]="kpi.completionRate>=80"
+           [class.accent-orange]="kpi.completionRate>=50 && kpi.completionRate<80"
+           [class.accent-red]="kpi.completionRate<50">
+        <!-- <div class="kpi-icon">📊</div> -->
+        <div class="kpi-num">{{ kpi.completionRate }}%</div>
+        <div class="kpi-label">% выполнения</div>
+      </div>
+      <div class="kpi-card accent-purple">
+        <!-- <div class="kpi-icon">👷</div> -->
+        <div class="kpi-num">{{ kpi.totalMasters }}</div>
+        <div class="kpi-label">Мастеров</div>
+      </div>
+      <div class="kpi-card accent-teal">
+        <!-- <div class="kpi-icon">🏭</div> -->
+        <div class="kpi-num">{{ kpi.totalRegions }}</div>
+        <div class="kpi-label">РЭС</div>
+      </div>
+      <div class="kpi-card accent-indigo">
+        <!-- <div class="kpi-icon">📅</div> -->
+        <div class="kpi-num">{{ kpi.completedToday }}</div>
+        <div class="kpi-label">Сегодня</div>
+      </div>
+      <div class="kpi-card accent-cyan">
+        <!-- <div class="kpi-icon">📆</div> -->
+        <div class="kpi-num">{{ kpi.completedThisMonth }}</div>
+        <div class="kpi-label">За месяц</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ ПРОБЛЕМЫ ═══════════════ -->
+    <div class="problems-block" *ngIf="problems.length > 0">
+      <div class="block-title">Автоматический анализ проблем</div>
+      <!-- Иконки убраны из классов startsWith, логика осталась -->
+      <div class="problem-item" *ngFor="let p of problems"
+            [class.problem-ok]="p.startsWith('✅')"
+            [class.problem-warn]="p.startsWith('⚠') || p.startsWith('👤') || p.startsWith('📊')"
+            [class.problem-crit]="p.startsWith('🔴') || p.startsWith('⛔')">
+
+          <!-- ✅ Зелёная галочка в квадрате -->
+          <svg *ngIf="p.startsWith('✅')" class="check-icon" viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="2" width="20" height="20" rx="4" ry="4"
+                  stroke="#5aaa2a" stroke-width="2" fill="none"/>
+            <polyline points="5,12 10,17 19,7"
+                      stroke="#5aaa2a" stroke-width="2.5"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+
+          <!-- ⚠️ Красный треугольник -->
+          <svg *ngIf="p.startsWith('⚠') || p.startsWith('👤') || p.startsWith('📊')"
+              class="check-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3L22 21H2L12 3Z" fill="#ef4444" stroke="none"/>
+            <line x1="12" y1="9" x2="12" y2="14"
+                  stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="17.5" r="1.2" fill="white"/>
+          </svg>
+
+          <!-- 🔴 Красный круг с ! -->
+          <svg *ngIf="p.startsWith('🔴') || p.startsWith('⛔')"
+              class="check-icon" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10"
+                    stroke="#ef4444" stroke-width="2.5" fill="none"/>
+            <line x1="12" y1="7" x2="12" y2="13"
+                  stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="12" cy="16.5" r="1.3" fill="#ef4444"/>
+          </svg>
+
+          {{ p | slice:2 }}
+        </div>
+    </div>
+
+    <!-- ═══════════════ ТОП / АНТИТОП ═══════════════ -->
+    <div class="top-grid">
+      <div class="top-card top-best" *ngIf="top.topMaster">
+        <div class="top-badge">Лучший мастер</div>
+        <!-- <div class="top-badge">🏆 Лучший мастер</div> -->
+        <div class="top-name">{{ top.topMaster.masterName }}</div>
+        <div class="top-sub">{{ top.topMaster.region }} · {{ top.topMaster.completed }} задач</div>
+      </div>
+      <div class="top-card top-worst" *ngIf="top.bottomMaster">
+        <div class="top-badge">Требует внимания</div>
+        <!-- <div class="top-badge">⚠️ Требует внимания</div> -->
+        <div class="top-name">{{ top.bottomMaster.masterName }}</div>
+        <div class="top-sub">{{ top.bottomMaster.region }} · {{ top.bottomMaster.pending }} не выполнено</div>
+      </div>
+      <div class="top-card top-best" *ngIf="top.topRegion">
+        <div class="top-badge">Лучший РЭС</div>
+        <!-- <div class="top-badge">🥇 Лучший РЭС</div> -->
+        <div class="top-name">{{ top.topRegion.region }}</div>
+        <div class="top-sub">{{ top.topRegion.rate }}% · {{ top.topRegion.completed }}/{{ top.topRegion.totalPlans }}</div>
+      </div>
+      <div class="top-card top-worst" *ngIf="top.bottomRegion">
+        <div class="top-badge">Отстающий РЭС</div>
+        <!-- <div class="top-badge">🔴 Отстающий РЭС</div> -->
+        <div class="top-name">{{ top.bottomRegion.region }}</div>
+        <div class="top-sub">{{ top.bottomRegion.rate }}% · {{ top.bottomRegion.completed }}/{{ top.bottomRegion.totalPlans }}</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ ДИНАМИКА ПО ДНЯМ ═══════════════ -->
+    <div class="section-card chart-card" *ngIf="daily.length > 0">
+      <div class="chart-header">
+        <div class="block-title">Динамика выполнения · 30 дней</div>
+        <!-- <div class="block-title">📈 Динамика выполнения (30 дней)</div> -->
+        <div class="chart-legend">
+          <span class="leg-dot" style="background:#22c55e"></span><span class="leg-text">Высокая</span>
+          <span class="leg-dot" style="background:#f59e0b"></span><span class="leg-text">Средняя</span>
+          <span class="leg-dot" style="background:#ef4444"></span><span class="leg-text">Низкая</span>
+        </div>
+      </div>
+      <div class="chart-body">
+        <!-- Ось Y -->
+        <div class="chart-y-axis">
+          <span>{{ maxDailyCount }}</span>
+          <span>{{ (maxDailyCount / 2) | number:'1.0-0' }}</span>
+          <span>0</span>
+        </div>
+        <!-- Колонки -->
+        <div class="chart-bars">
+          <div class="chart-col" *ngFor="let d of daily; let i = index"
+               [title]="d.date + ': ' + d.count + ' задач'">
+            <div class="chart-tooltip">{{ d.count }}</div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-inner"
+                   [style.height.%]="(d.count / maxDailyCount) * 100"
+                   [style.background]="barColor((d.count / maxDailyCount) * 100)">
+              </div>
+            </div>
+            <div class="chart-date" *ngIf="i === 0 || i === daily.length-1 || i % 7 === 0">
+              {{ d.date | slice:5:10 }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Горизонтальные линии сетки (декоративные, через CSS) -->
+    </div>
+
+    <!-- ═══════════════ ДЕТАЛИЗАЦИЯ (вкладки) ═══════════════ -->
+    <div class="section-card">
+      <div class="detail-tabs">
+        <button class="detail-tab" [class.active]="activeDetail==='regions'" (click)="activeDetail='regions'">
+          По РЭС ({{ byRegion.length }})
+          <!-- 🏭 По РЭС -->
+        </button>
+        <button class="detail-tab" [class.active]="activeDetail==='masters'" (click)="activeDetail='masters'">
+          По мастерам ({{ byMaster.length }})
+          <!-- 👷 По мастерам -->
+        </button>
+        <button class="detail-tab" [class.active]="activeDetail==='meters'" (click)="activeDetail='meters'">
+          Типы счётчиков
+          <!-- ⚡ Типы счётчиков -->
+        </button>
+      </div>
+
+      <!-- ТАБЛИЦА РЭС -->
+      <div *ngIf="activeDetail==='regions'">
+       <div class="table-scroll">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>РЭС</th>
+              <th>Планов</th>
+              <th>Выполнено</th>
+              <th>В работе</th>
+              <th>% выполнения</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of byRegion">
+              <td class="name-col"><strong>{{ r.region }}</strong></td>
+              <td class="num-col">{{ r.totalPlans }}</td>
+              <td class="num-col green-num">{{ r.completed }}</td>
+              <td class="num-col orange-num">{{ r.pending }}</td>
+              <td class="progress-col">
+                <div class="prog-wrap">
+                  <div class="prog-bar" [style.width.%]="meterBarWidth(r.rate)"
+                       [style.background]="barColor(r.rate)"></div>
+                </div>
+                <span class="prog-pct">{{ r.rate }}%</span>
+              </td>
+             <td>
+                <span class="status-badge" [ngClass]="statusClass(r.status)">
+                  
+                  <!-- Галочка для Норма/зелёный -->
+                  <svg *ngIf="statusClass(r.status) === 'status-green'" 
+                      width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-right:5px; flex-shrink:0;">
+                    <rect x="2" y="2" width="20" height="20" rx="4" ry="4"
+                          stroke="#5aaa2a" stroke-width="2.5" fill="none"/>
+                    <polyline points="5,12 10,17 19,7"
+                              stroke="#5aaa2a" stroke-width="2.5"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+
+                  <!-- Треугольник для предупреждения -->
+                  <svg *ngIf="statusClass(r.status) === 'status-yellow'"
+                      width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-right:5px; flex-shrink:0;">
+                    <path d="M12 3L22 21H2L12 3Z" fill="#f59e0b"/>
+                    <line x1="12" y1="9" x2="12" y2="14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="17.5" r="1.2" fill="white"/>
+                  </svg>
+
+                  <!-- Круг для критического -->
+                  <svg *ngIf="statusClass(r.status) === 'status-red'"
+                      width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-right:5px; flex-shrink:0;">
+                    <circle cx="12" cy="12" r="10" stroke="#ef4444" stroke-width="2.5" fill="none"/>
+                    <line x1="12" y1="7" x2="12" y2="13" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="12" cy="16.5" r="1.3" fill="#ef4444"/>
+                  </svg>
+
+                  {{ statusLabel(r.status) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+       </div>
+
+        <div class="table-empty" *ngIf="byRegion.length === 0">Нет данных</div>
+      </div>
+
+      <!-- ТАБЛИЦА МАСТЕРОВ -->
+      <div *ngIf="activeDetail==='masters'">
+       <div class="table-scroll">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Мастер</th>
+              <th>РЭС</th>
+              <th>Всего</th>
+              <th>Выполнено</th>
+              <th>В работе</th>
+              <th>% выполнения</th>
+              <th>Последняя активность</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of byMaster; let i = index">
+              <td class="idx-col">{{ i + 1 }}</td>
+              <td class="name-col"><strong>{{ m.masterName }}</strong></td>
+              <td>{{ m.region || '—' }}</td>
+              <td class="num-col">{{ m.total }}</td>
+              <td class="num-col green-num">{{ m.completed }}</td>
+              <td class="num-col orange-num">{{ m.pending }}</td>
+              <td>
+                <span class="rate-pill" [ngClass]="masterRateClass(m.rate)">{{ m.rate }}%</span>
+              </td>
+              <td class="date-col">{{ m.lastActivity || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        </div> 
+        <div class="table-empty" *ngIf="byMaster.length === 0">Нет данных</div>
+      </div>
+
+      <!-- ТИПЫ СЧЁТЧИКОВ -->
+      <div *ngIf="activeDetail==='meters'" class="meter-types-wrap">
+        <div class="meter-type-row" *ngFor="let t of byMeterType">
+          <div class="mt-name">{{ t.meterType }}</div>
+          <div class="mt-bar-wrap">
+            <div class="mt-bar" [style.width.%]="meterBarWidth(t.percent)"
+                 [style.background]="barColor(t.percent)"></div>
+          </div>
+          <div class="mt-stats">
+            <span class="mt-count">{{ t.count }}</span>
+            <span class="mt-pct">{{ t.percent }}%</span>
+          </div>
+        </div>
+        <div class="table-empty" *ngIf="byMeterType.length === 0">Нет данных</div>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

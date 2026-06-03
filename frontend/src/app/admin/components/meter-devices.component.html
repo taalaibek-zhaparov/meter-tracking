@@ -1,0 +1,341 @@
+<div class="meter-page">
+  <div class="page-header">
+    <div class="header-left">
+      <a routerLink="/admin" class="btn-back">← Панель администратора</a>
+      <h2>База данных счётчиков</h2>
+      <div class="stats">
+        <span class="stat-badge available">Доступно: {{ availableCount }}</span>
+        <span class="stat-badge total">Всего: {{ totalCount }}</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-scan"     (click)="openScanner()">Сканировать</button>
+      <button class="btn btn-import"   (click)="triggerCsvImport()">Импорт CSV</button>
+      <button class="btn btn-template" (click)="downloadCsvTemplate()">Шаблон CSV</button>
+      <button class="btn btn-sql"      (click)="exportSql()">Экспорт SQL</button>
+      <button class="btn btn-add"      (click)="openAddForm()">Добавить счётчик</button>
+    </div>
+  </div>
+
+  <input #csvInput type="file" accept=".csv" style="display:none" (change)="onCsvFileSelected($event)">
+
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="alert alert-error"   *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="alert alert-success" *ngIf="importSuccess">{{ importSuccess }}</div>
+  <div class="alert alert-error"   *ngIf="importError">{{ importError }}</div>
+
+  <div class="search-row">
+    <div class="search-box">
+      <input type="text" [(ngModel)]="searchQuery" (input)="applySearch()"
+             placeholder="Поиск по номеру, типу, коду 1С, SIM..." class="search-input"/>
+      <button *ngIf="searchQuery" class="clear-btn" (click)="searchQuery=''; applySearch()">✕</button>
+    </div>
+    <span class="results-count" *ngIf="searchQuery">Найдено: {{ filteredDevices.length }}</span>
+  </div>
+
+  <!-- ═══════════════ ФОРМА ДОБАВЛЕНИЯ ═══════════════ -->
+  <div class="add-form-card" *ngIf="showAddForm">
+    <div class="form-card-header">
+      <h3>Новый счётчик</h3>
+      <button class="close-btn" (click)="showAddForm = false">✕</button>
+    </div>
+
+    <div class="form-section-title"><span class="step-badge">1</span> Данные счётчика</div>
+    <div class="form-grid">
+      <div class="field-group required">
+        <label>Номер счётчика *</label>
+        <input class="field-input" [(ngModel)]="newDevice.meterNumber" placeholder="084253002990" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label>SIM-карта</label>
+        <input class="field-input" [(ngModel)]="newDevice.simCardNumber" placeholder="996700123456">
+      </div>
+      <div class="field-group">
+        <label>ICCID</label>
+        <input class="field-input" [(ngModel)]="newDevice.iccidNumber" placeholder="89996012345678901234">
+      </div>
+      <div class="field-group">
+        <label>Статус</label>
+        <select class="field-input" [(ngModel)]="newDevice.available">
+          <option [ngValue]="true">Доступен</option>
+          <option [ngValue]="false">Занят</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section-title"><span class="step-badge">2</span> Модель из справочника 1С</div>
+    <div class="catalog-search-wrap">
+      <div class="catalog-search-box">
+        <svg class="search-ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="catalog-search-input" [(ngModel)]="catalogQuery"
+               (input)="onCatalogQueryInput()" (blur)="closeCatalogDropdown()"
+               placeholder="Введите наименование: HXE-110, DTS27..."
+               autocomplete="off" [disabled]="!!selectedModel"/>
+        <button *ngIf="selectedModel" class="clear-model-btn" (click)="clearModel()" title="Изменить">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <span *ngIf="catalogLoading" class="catalog-spinner"></span>
+      </div>
+      <div class="catalog-dropdown" *ngIf="showCatalogDropdown && catalogResults.length > 0">
+        <div class="catalog-option" *ngFor="let model of catalogResults" (mousedown)="selectModel(model)">
+          <div class="catalog-option-name">{{ model.name }}</div>
+          <div class="catalog-option-meta">
+            <code class="catalog-code">{{ model.code }}</code>
+            <span class="catalog-specs-count">{{ model.specs.length }} вар.</span>
+          </div>
+        </div>
+      </div>
+      <div class="catalog-no-results" *ngIf="showCatalogDropdown && !catalogLoading && catalogQuery.length > 1 && catalogResults.length === 0">
+        Не найдено. <a routerLink="/admin/catalog" target="_blank">Импортировать из 1С →</a>
+      </div>
+    </div>
+
+    <ng-container *ngIf="selectedModel">
+      <div class="form-section-title">
+        <span class="step-badge">3</span> Вариант исполнения
+        <span class="model-selected-name">{{ selectedModel.name }}</span>
+      </div>
+      <div class="spec-cards-grid">
+        <div class="spec-select-card" *ngFor="let spec of selectedModel.specs"
+             [class.spec-active]="newDevice.selectedSpecId === spec.id"
+             (click)="selectSpec(spec)">
+          <div class="spec-check" *ngIf="newDevice.selectedSpecId === spec.id">✓</div>
+          <div class="spec-row-item"><span class="spec-lbl">Фазность</span><span class="spec-val phase-val">{{ spec.phase === 1 ? '1-фазный' : '3-фазный' }}</span></div>
+          <div class="spec-row-item"><span class="spec-lbl">Ток</span><span class="spec-val">{{ spec.amp }}</span></div>
+          <div class="spec-row-item"><span class="spec-lbl">Значность</span><span class="spec-val">{{ spec.digits }} знаков</span></div>
+          <div class="spec-row-item"><span class="spec-lbl">Напряжение</span><span class="spec-val">{{ spec.voltage }}</span></div>
+        </div>
+      </div>
+
+      <div class="auto-filled-preview" *ngIf="newDevice.selectedSpecId != null">
+        <div class="preview-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Будет сохранено автоматически
+        </div>
+        <div class="preview-chips">
+          <span class="preview-chip"><strong>Тип:</strong> {{ newDevice.meterType }}</span>
+          <span class="preview-chip"><strong>Код 1С:</strong> {{ newDevice.meterModelCode }}</span>
+          <span class="preview-chip"><strong>Фаз.:</strong> {{ newDevice.phases === 1 ? '1-фаз' : '3-фаз' }}</span>
+          <span class="preview-chip"><strong>Ток:</strong> {{ newDevice.amperage }} А</span>
+          <span class="preview-chip"><strong>Зн.:</strong> {{ newDevice.znch }}</span>
+          <span class="preview-chip"><strong>U:</strong> {{ newDevice.voltage }}</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="form-actions">
+      <button class="btn btn-cancel" (click)="showAddForm = false">Отмена</button>
+      <button class="btn btn-save" (click)="saveDevice()" [disabled]="!isFormValid">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Сохранить счётчик
+      </button>
+    </div>
+  </div>
+
+  <!-- ЗАГРУЗКА -->
+  <div class="loading-row" *ngIf="loading">
+    <div class="spinner"></div><span>Загрузка...</span>
+  </div>
+
+  <!-- ПУСТО -->
+  <div class="empty-state" *ngIf="!loading && filteredDevices.length === 0 && !showAddForm">
+    <p *ngIf="!searchQuery">База счётчиков пуста. Добавьте счётчик или импортируйте из CSV.</p>
+    <p *ngIf="searchQuery">Счётчик «{{ searchQuery }}» не найден.</p>
+    <button class="btn btn-add" *ngIf="!searchQuery" (click)="openAddForm()">Добавить счётчик</button>
+  </div>
+
+  <!-- ═══════════════ ТАБЛИЦА ═══════════════ -->
+  <div class="table-wrapper" *ngIf="!loading && filteredDevices.length > 0">
+    <table class="devices-table">
+      <thead>
+        <tr>
+          <th>Номер счётчика</th>
+          <th>Тип / Модель</th>
+          <th>Код 1С</th>
+          <th>Фаз.</th>
+          <th>Ток</th>
+          <th>Зн.</th>
+          <th>Напряжение</th>
+          <th>SIM-карта</th>
+          <th>ICCID</th>
+          <th>Статус</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let device of paginatedDevices" [class.highlighted]="scanResult === device.meterNumber">
+
+          <!-- РЕЖИМ ПРОСМОТРА -->
+          <ng-container *ngIf="editingDevice?.id !== device.id">
+            <td class="meter-number-cell"><span class="meter-num">{{ device.meterNumber }}</span></td>
+            <td>
+              <div class="type-cell">
+                <span class="type-name">{{ device.meterType }}</span>
+                <span *ngIf="device.meterModelName && device.meterModelName !== device.meterType"
+                      class="model-sub">{{ device.meterModelName }}</span>
+              </div>
+            </td>
+            <td>
+              <code *ngIf="device.meterModelCode" class="code-1c">{{ device.meterModelCode }}</code>
+              <span *ngIf="!device.meterModelCode" class="no-val">—</span>
+            </td>
+            <td>{{ device.phases ?? '—' }}</td>
+            <td>{{ device.amperage ? device.amperage + ' А' : '—' }}</td>
+            <td>{{ device.znch ?? '—' }}</td>
+            <td>
+              <span *ngIf="device.voltage" class="voltage-badge">{{ device.voltage }}</span>
+              <span *ngIf="!device.voltage" class="no-val">—</span>
+            </td>
+            <td>{{ device.simCardNumber || '—' }}</td>
+            <td class="iccid-cell">{{ device.iccidNumber || '—' }}</td>
+            <td>
+              <span class="status-pill" [class.available]="device.available" [class.busy]="!device.available">
+                {{ device.available ? 'Доступен' : 'Занят' }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <button class="icon-btn edit-btn" (click)="startEdit(device)" title="Редактировать">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button class="icon-btn delete-btn" (click)="deleteDevice(device.id)" title="Удалить">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            </td>
+          </ng-container>
+
+          <!-- РЕЖИМ РЕДАКТИРОВАНИЯ (только 4 поля) -->
+          <ng-container *ngIf="editingDevice?.id === device.id">
+            <!-- Номер (редактируемый) -->
+            <td><input class="inline-input" [(ngModel)]="editingDevice!.meterNumber"></td>
+            <!-- Тип — только чтение -->
+            <td>
+              <div class="type-cell">
+                <span class="type-name readonly-val">{{ device.meterType }}</span>
+                <span class="readonly-hint">из справочника</span>
+              </div>
+            </td>
+            <!-- Код 1С — только чтение -->
+            <td>
+              <code *ngIf="device.meterModelCode" class="code-1c">{{ device.meterModelCode }}</code>
+              <span *ngIf="!device.meterModelCode" class="no-val">—</span>
+            </td>
+            <!-- Фаз., Ток, Зн., Напряжение — только чтение -->
+            <td><span class="readonly-val">{{ device.phases ?? '—' }}</span></td>
+            <td><span class="readonly-val">{{ device.amperage ? device.amperage + ' А' : '—' }}</span></td>
+            <td><span class="readonly-val">{{ device.znch ?? '—' }}</span></td>
+            <td><span class="readonly-val">{{ device.voltage || '—' }}</span></td>
+            <!-- SIM (редактируемый) -->
+            <td><input class="inline-input" [(ngModel)]="editingDevice!.simCardNumber" placeholder="SIM"></td>
+            <!-- ICCID (редактируемый) -->
+            <td><input class="inline-input" [(ngModel)]="editingDevice!.iccidNumber" placeholder="ICCID"></td>
+            <!-- Статус (редактируемый) -->
+            <td>
+              <select class="inline-select" [(ngModel)]="editingDevice!.available">
+                <option [ngValue]="true">Доступен</option>
+                <option [ngValue]="false">Занят</option>
+              </select>
+            </td>
+            <td class="actions-cell">
+              <button class="icon-btn save-btn" (click)="saveEdit()" title="Сохранить">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button class="icon-btn cancel-btn" (click)="cancelEdit()" title="Отмена">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </td>
+          </ng-container>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination-bar" *ngIf="totalPages > 1">
+    <button class="page-btn" (click)="currentPage=1"             [disabled]="currentPage===1">«</button>
+    <button class="page-btn" (click)="currentPage=currentPage-1" [disabled]="currentPage===1">‹</button>
+    <span class="page-info">{{ currentPage }} / {{ totalPages }} ({{ filteredDevices.length }} записей)</span>
+    <button class="page-btn" (click)="currentPage=currentPage+1" [disabled]="currentPage===totalPages">›</button>
+    <button class="page-btn" (click)="currentPage=totalPages"    [disabled]="currentPage===totalPages">»</button>
+  </div>
+</div>
+
+<!-- ═══════════════ СКАНЕР ═══════════════ -->
+<div class="modal-overlay" *ngIf="showScanner" (click)="stopScanner()">
+  <div class="scanner-modal" (click)="$event.stopPropagation()">
+    <div class="scanner-header">
+      <h3>Сканирование штрих-кода</h3>
+      <button class="close-btn" (click)="stopScanner()">✕</button>
+    </div>
+    <div class="scanner-body">
+      <div class="video-wrapper">
+        <video #videoEl class="scanner-video" playsinline autoplay muted></video>
+        <div class="scan-frame">
+          <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
+          <div class="scan-corner bl"></div><div class="scan-corner br"></div>
+          <div class="scan-line"></div>
+        </div>
+      </div>
+      <div class="scanner-hint">Наведите камеру на штрих-код</div>
+      <div class="scanner-error" *ngIf="scannerError">⚠️ {{ scannerError }}</div>
+      <div class="manual-input-row">
+        <span>Или введите вручную:</span>
+        <input type="text" class="manual-input" placeholder="Номер счётчика..."
+               (input)="onManualCode($event)" (keyup.enter)="stopScanner()"/>
+        <button class="btn btn-save" (click)="stopScanner()">Найти</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ИМПОРТ PREVIEW ═══════════════ -->
+<div class="modal-overlay" *ngIf="showImportPreview" (click)="cancelImport()">
+  <div class="import-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Предпросмотр импорта ({{ importPreview.length }} записей)</h3>
+      <button class="close-btn" (click)="cancelImport()">✕</button>
+    </div>
+    <div class="import-hint">
+      Формат CSV: <code>Номер;Тип;SIM;ICCID;Фазность;Ампер;Значность;Напряжение</code>
+    </div>
+    <div class="import-table-wrap">
+      <table class="import-preview-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Номер</th><th>Тип</th><th>Фаз.</th>
+            <th>А</th><th>Зн.</th><th>Напряж.</th><th>SIM</th><th>ICCID</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of importPreview; let i = index">
+            <td class="row-num">{{ i + 1 }}</td>
+            <td><strong>{{ row.meterNumber }}</strong></td>
+            <td>{{ row.meterType }}</td>
+            <td>{{ row.phases ?? '—' }}</td>
+            <td>{{ row.amperage ? row.amperage + ' А' : '—' }}</td>
+            <td>{{ row.znch ?? '—' }}</td>
+            <td>{{ row.voltage || '—' }}</td>
+            <td>{{ row.simCardNumber || '—' }}</td>
+            <td>{{ row.iccidNumber || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="import-actions">
+      <button class="btn btn-cancel" (click)="cancelImport()">Отмена</button>
+      <button class="btn btn-save"   (click)="confirmImport()">Импортировать {{ importPreview.length }} записей</button>
+    </div>
+  </div>
+</div>
