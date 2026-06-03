@@ -25,18 +25,35 @@ It replaces manual spreadsheets and fragmented Excel files with a unified digita
 - Improves transparency across the entire network
 
 ## Architecture
-User
-↓
-Nginx (HTTPS)
-↓
-Angular SPA
-↓
-Spring Boot API
-↓
-PostgreSQL
-Real-time: WebSocket
-Monitoring: Prometheus → Grafana
+``` mermaid
+graph TD
+    User["User (Browser)"]
+    Nginx["Nginx\n(HTTPS + Rate Limiting)"]
+    Frontend["Angular SPA\n(TypeScript)"]
+    Backend["Spring Boot API\n(Java 17)"]
+    DB["PostgreSQL 17"]
+    WS["WebSocket\n(Real-time)"]
+    Prometheus["Prometheus"]
+    Grafana["Grafana\n(JVM Metrics)"]
+    OneC["1C Integration"]
 
+    User -->|HTTPS :443| Nginx
+    Nginx -->|Static files| Frontend
+    Nginx -->|/api proxy| Backend
+    Nginx -->|/ws proxy| WS
+    Backend --> DB
+    Backend --> WS
+    Backend --> OneC
+    Backend -->|/actuator/prometheus| Prometheus
+    Prometheus --> Grafana
+
+    style Nginx fill:#f0a500,color:#000
+    style Backend fill:#6db33f,color:#fff
+    style Frontend fill:#dd0031,color:#fff
+    style DB fill:#336791,color:#fff
+    style Grafana fill:#f46800,color:#fff
+    style Prometheus fill:#e6522c,color:#fff
+```
 ## Tech Stack
 
 ### Backend
