@@ -1,0 +1,36 @@
+# Backend
+backend/target/
+backend/*.log
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+**/application.properties
+**/application.yml
+**/application-*.properties
+**/application-*.yml
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+ssl/*.pem
+ssl/*.key
+ssl/*.crt
+
+# Docker
+*.log
